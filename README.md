@@ -248,3 +248,7 @@ agentctl add-skill https://github.com/user/skill-repo
 ## License
 
 MIT
+
+## Testing
+
+Run `bats tests/` to execute the test suite.
