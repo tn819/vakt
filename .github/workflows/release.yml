@@ -36,10 +36,14 @@ jobs:
           node-version: '20'
 
       - name: Install dependencies
-        run: npm install
+        run: |
+          sudo apt-get install -y bats
+          npm install
 
       - name: Run tests
-        run: npm test
+        run: |
+          export PATH="$PWD/src:$PATH"
+          bats tests/
 
       - name: Release
         env:
