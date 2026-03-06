@@ -22,6 +22,22 @@ git clone https://github.com/yourorg/agentctl ~/.agentctl
 export PATH="$PATH:$HOME/.agentctl/src"
 ```
 
+## Ecosystem
+
+agentctl is compatible with the open **Agent Skills** ecosystem and **Model Context Protocol**.
+
+### Skills
+
+- **Directory**: [skills.sh](https://skills.sh) - Discover and share skills
+- **Specification**: [agentskills.io](https://agentskills.io) - Open skill format
+- **Examples**: [vercel-labs/agent-skills](https://github.com/vercel-labs/agent-skills)
+
+### MCP Servers
+
+- **Official Docs**: [modelcontextprotocol.io](https://modelcontextprotocol.io)
+- **Configuration**: [Local Server Setup](https://modelcontextprotocol.io/docs/develop/connect-local-servers)
+- **Registry**: [MCP Server Registry](https://github.com/modelcontextprotocol/registry)
+
 ## Quick Start
 
 ```bash
@@ -125,9 +141,15 @@ agentctl upgrade                 Update to latest version
 
 - `secret:KEY_NAME` - Resolved from your secrets backend at sync time
 
+**Learn more:**
+
+- [MCP Documentation](https://modelcontextprotocol.io/docs/develop/connect-local-servers)
+- [Server Configuration Guide](https://modelcontextprotocol.io/docs/learn/server-concepts)
+- [Official MCP Servers](https://github.com/modelcontextprotocol/servers)
+
 ## Skills
 
-Skills are stored as `SKILL.md` files with YAML frontmatter:
+agentctl uses the open **Agent Skills** specification. Skills are stored as `SKILL.md` files with YAML frontmatter:
 
 ```
 ~/.agents/skills/my-skill/
@@ -149,6 +171,15 @@ description: What this skill does
 # Skill Name
 
 Instructions for the AI agent...
+```
+
+### Discovering Skills
+
+Browse the [skills.sh](https://skills.sh) registry to discover skills, or use the bundled `find-skills` skill:
+
+```bash
+# Install a skill from the registry
+agentctl add-skill https://github.com/vercel-labs/agent-skills react-best-practices
 ```
 
 ### Adding Skills
@@ -248,60 +279,6 @@ agentctl add-skill https://github.com/user/skill-repo
 ## License
 
 MIT
-
-## Release Process
-
-This project uses **semantic-release** to automatically version and release based on conventional commits.
-
-### How It Works
-
-1. Merge PR or push to `main` branch
-2. Semantic-release analyzes commits since last release
-3. Automatically determines version bump (major/minor/patch)
-4. Creates GitHub release with changelog
-5. Updates version in `package.json` and `CHANGELOG.md`
-
-### Commit Message Format
-
-Use [Conventional Commits](https://www.conventionalcommits.org/):
-
-```
-feat: add new command
-fix: resolve issue with sync
-docs: update README
-chore: update dependencies
-refactor: simplify logic
-```
-
-### Release Types (auto-detected)
-
-| Commit | Release |
-|--------|---------|
-| `feat:` | Minor (x.1.0) |
-| `fix:` | Patch (x.x.1) |
-| `feat!:` or `BREAKING CHANGE:` | Major (1.0.0) |
-
-### Manual Release (Dry Run)
-
-To preview a release without publishing:
-
-1. Go to **Actions** → **Release**
-2. Click **Run workflow**
-3. Select **Dry run: true**
-4. Click **Run workflow**
-
-### Local Development
-
-```bash
-# Install dependencies
-npm install
-
-# Test the release process locally
-npx semantic-release --dry-run
-
-# Actually release
-npx semantic-release
-```
 
 ## Testing
 
