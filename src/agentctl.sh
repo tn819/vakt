@@ -224,7 +224,7 @@ PYEOF
 import json
 with open('$mcp_config') as f:
     config = json.load(f)
-config['$name'] = {"command": "$cmd", "args": $args.split() if '$args' else []}
+config['$name'] = {"command": "$cmd", "args": '$args'.split() if '$args' else []}
 with open('$mcp_config', 'w') as f:
     json.dump(config, f, indent=2)
     f.write('\n')

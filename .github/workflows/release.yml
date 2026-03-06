@@ -7,13 +7,15 @@ on:
 
 permissions:
   contents: write
+  pull-requests: write
 
 jobs:
   test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
-
+        with:
+          ref: develop
       - name: Install bats
         run: sudo apt-get install -y bats
 
@@ -22,11 +24,33 @@ jobs:
           export PATH="$PWD/src:$PATH"
           bats tests/
 
-  release:
+  merge-to-main:
     needs: test
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+
+      - name: Merge develop to main
+        run: |
+          git checkout main
+          git merge develop --no-ff -m "chore: release ${GITHUB_REF#refs/tags/}
+          
+          Merge develop to main for release"
+          git push origin main
+
+  release:
+    needs: merge-to-main
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0
 
@@ -37,9 +61,8 @@ jobs:
       - name: Generate changelog
         id: changelog
         run: |
-          # Get previous tag
           PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-
+          
           if [ -n "$PREV_TAG" ]; then
             echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
             git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" >> $GITHUB_OUTPUT
@@ -64,18 +87,18 @@ jobs:
         with:
           body: |
             ## agentctl ${{ steps.get_version.outputs.VERSION }}
-
+            
             ### Changes
             ${{ steps.changelog.outputs.CHANGELOG }}
-
+            
             ### Installation
-
+            
             ```bash
             curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh | bash
             ```
-
+            
             Or download the tarball below and extract to `~/.agentctl/`
-
+            
             ### What's Included
             - agentctl CLI (init, sync, secrets, config, add-server, add-skill, list)
             - Cross-platform secrets management (macOS Keychain, Linux pass)
