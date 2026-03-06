@@ -1,0 +1,88 @@
+# Dependencies
+node_modules/
+package-lock.json
+yarn.lock
+
+# Test artifacts
+tests/test_results/
+*.tap
+.bats/
+
+# User data (never commit these)
+.agents/
+*.env
+secrets.env
+
+# Provider configs (created during sync/testing)
+.config/
+.claude*
+.gemini/
+.codex/
+.cursor/
+.windsurf/
+.aider*
+
+# OS files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Editor files
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+*.sublime-*
+
+# Temporary files
+*.tmp
+*.temp
+*.log
+*.bak
+
+# Build artifacts
+dist/
+build/
+*.tar.gz
+*.zip
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+*.so
+.pytest_cache/
+.coverage
+
+# Shell
+*.sh.bak
+
+# Documentation builds
+docs/_build/
+site/
+
+# Backup files
+*.backup
+*.old
+
+# Credentials (never commit)
+credentials.json
+.env.local
+.env.*.local
+*.pem
+*.key
+secrets/
+
+# Test coverage
+coverage/
+.nyc_output/
+*.lcov
+
+# Release artifacts
+releases/
