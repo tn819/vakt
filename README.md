@@ -251,52 +251,57 @@ MIT
 
 ## Release Process
 
-### Option 1: GitHub UI (Recommended)
+This project uses **semantic-release** to automatically version and release based on conventional commits.
 
-1. Go to the **Actions** tab on GitHub
-2. Select the **Release** workflow
-3. Click **Run workflow**
-4. Enter the version (e.g., `v0.0.2`)
-5. Click **Run workflow**
+### How It Works
 
-The workflow will:
-- Run tests on the `develop` branch
-- Merge `develop` into `main`
-- Create a GitHub Release with changelog
-- Upload a tarball for download
+1. Merge PR or push to `main` branch
+2. Semantic-release analyzes commits since last release
+3. Automatically determines version bump (major/minor/patch)
+4. Creates GitHub release with changelog
+5. Updates version in `package.json` and `CHANGELOG.md`
 
-### Option 2: Manual Release
+### Commit Message Format
 
-```bash
-# 1. Update version in src/agentctl.sh
-#    Change the version() function output
+Use [Conventional Commits](https://www.conventionalcommits.org/):
 
-# 2. Update CHANGELOG.md
-#    Add new version section at the top
-
-# 3. Commit changes
-git add src/agentctl.sh CHANGELOG.md
-git commit -m "chore: bump version to v0.0.2"
-
-# 4. Push to develop
-git push origin develop
-
-# 5. Create and push tag
-git tag v0.0.2
-git push origin v0.0.2
-
-# GitHub Actions will:
-# - Run tests
-# - Merge develop → main
-# - Create release with changelog
+```
+feat: add new command
+fix: resolve issue with sync
+docs: update README
+chore: update dependencies
+refactor: simplify logic
 ```
 
-### Version Format
+### Release Types (auto-detected)
 
-Use semantic versioning:
-- `v0.0.1` - Patch release (bug fixes)
-- `v0.1.0` - Minor release (new features)
-- `v1.0.0` - Major release (breaking changes)
+| Commit | Release |
+|--------|---------|
+| `feat:` | Minor (x.1.0) |
+| `fix:` | Patch (x.x.1) |
+| `feat!:` or `BREAKING CHANGE:` | Major (1.0.0) |
+
+### Manual Release (Dry Run)
+
+To preview a release without publishing:
+
+1. Go to **Actions** → **Release**
+2. Click **Run workflow**
+3. Select **Dry run: true**
+4. Click **Run workflow**
+
+### Local Development
+
+```bash
+# Install dependencies
+npm install
+
+# Test the release process locally
+npx semantic-release --dry-run
+
+# Actually release
+npx semantic-release
+```
 
 ## Testing
 

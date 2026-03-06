@@ -3,140 +3,56 @@ name: Release
 on:
   workflow_dispatch:
     inputs:
-      version:
-        description: 'Version to release (e.g., v0.0.2)'
-        required: true
-        type: string
+      dry_run:
+        description: 'Dry run (preview release without publishing)'
+        required: false
+        default: 'false'
+        type: choice
+        options:
+          - 'false'
+          - 'true'
   push:
-    tags:
-      - "v*"
+    branches:
+      - main
 
 permissions:
   contents: write
   pull-requests: write
 
 jobs:
-  test:
+  release:
     runs-on: ubuntu-latest
+    # Only run on main branch push or manual dispatch
+    if: github.ref == 'refs/heads/main' || github.event_name == 'workflow_dispatch'
     steps:
       - uses: actions/checkout@v4
         with:
-          ref: develop
+          fetch-depth: 0
+          persist-credentials: false
 
-      - name: Install bats
-        run: sudo apt-get install -y bats
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install
 
       - name: Run tests
-        run: |
-          export PATH="$PWD/src:$PATH"
-          bats tests/
+        run: npm test
 
-  merge-to-main:
-    needs: test
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          token: ${{ secrets.GITHUB_TOKEN }}
-
-      - name: Configure Git
-        run: |
-          git config --local user.email "action@github.com"
-          git config --local user.name "GitHub Action"
-
-      - name: Get version
-        id: get_version
-        run: |
-          if [[ -n "${{ github.event.inputs.version }}" ]]; then
-            VERSION="${{ github.event.inputs.version }}"
-          else
-            VERSION="${GITHUB_REF#refs/tags/}"
-          fi
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "Using version: $VERSION"
-
-      - name: Merge develop to main
-        run: |
-          git checkout main
-          git merge develop --no-ff -m "chore: release ${{ steps.get_version.outputs.VERSION }}
-          
-          Merge develop to main for release"
-          git push origin main
-
-      - name: Create tag (workflow_dispatch only)
-        if: github.event.inputs.version != ''
-        run: |
-          git tag -a ${{ steps.get_version.outputs.VERSION }} -m "Release ${{ steps.get_version.outputs.VERSION }}"
-          git push origin ${{ steps.get_version.outputs.VERSION }}
-
-  release:
-    needs: merge-to-main
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-
-      - name: Get version
-        id: get_version
-        run: |
-          # Use workflow_dispatch input if provided, otherwise use tag ref
-          if [[ -n "${{ github.event.inputs.version }}" ]]; then
-            VERSION="${{ github.event.inputs.version }}"
-          else
-            VERSION="${GITHUB_REF#refs/tags/}"
-          fi
-          echo "VERSION=$VERSION" >> $GITHUB_OUTPUT
-          echo "Using version: $VERSION"
-
-      - name: Generate changelog
-        id: changelog
-        run: |
-          PREV_TAG=$(git describe --tags --abbrev=0 HEAD^ 2>/dev/null || echo "")
-          
-          if [ -n "$PREV_TAG" ]; then
-            echo "CHANGELOG<<EOF" >> $GITHUB_OUTPUT
-            git log ${PREV_TAG}..HEAD --pretty=format:"- %s (%h)" >> $GITHUB_OUTPUT
-            echo "" >> $GITHUB_OUTPUT
-            echo "EOF" >> $GITHUB_OUTPUT
-          else
-            echo "CHANGELOG=Initial release" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Create tarball
-        run: |
-          tar -czf agentctl-${{ steps.get_version.outputs.VERSION }}.tar.gz \
-            --exclude='.git' \
-            --exclude='tests' \
-            --exclude='.github' \
-            --exclude='*.md' \
-            --exclude='.gitignore' \
-            .
-
-      - name: Create Release
-        uses: softprops/action-gh-release@v1
-        with:
-          body: |
-            ## agentctl ${{ steps.get_version.outputs.VERSION }}
-            
-            ### Changes
-            ${{ steps.changelog.outputs.CHANGELOG }}
-            
-            ### Installation
-            
-            ```bash
-            curl -fsSL https://raw.githubusercontent.com/${{ github.repository }}/main/install.sh | bash
-            ```
-            
-            Or download the tarball below and extract to `~/.agentctl/`
-            
-            ### What's Included
-            - agentctl CLI (init, sync, secrets, config, add-server, add-skill, list)
-            - Cross-platform secrets management (macOS Keychain, Linux pass)
-            - 5 bundled skills (skill-creator, find-skills, credential-best-practices, audit-credentials, export-credentials)
-          files: agentctl-${{ steps.get_version.outputs.VERSION }}.tar.gz
-          draft: false
-          prerelease: false
+      - name: Release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GIT_AUTHOR_NAME: github-actions[bot]
+          GIT_AUTHOR_EMAIL: github-actions[bot]@users.noreply.github.com
+          GIT_COMMITTER_NAME: github-actions[bot]
+          GIT_COMMITTER_EMAIL: github-actions[bot]@users.noreply.github.com
+        run: npx semantic-release
+        if: github.event.inputs.dry_run != 'true'
+
+      - name: Dry Run
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: npx semantic-release --dry-run
+        if: github.event.inputs.dry_run == 'true'
