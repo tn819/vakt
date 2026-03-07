@@ -1,5 +1,6 @@
 {
   "branches": ["main"],
+  "tagFormat": "v${version}",
   "plugins": [
     [
       "@semantic-release/commit-analyzer",
@@ -19,7 +20,12 @@
     [
       "@semantic-release/release-notes-generator",
       {
-        "preset": "conventionalcommits"
+        "preset": "conventionalcommits",
+        "writerOpts": {
+          "groupBy": "type",
+          "commitGroupsSort": "title",
+          "commitsSort": "header"
+        }
       }
     ],
     [
