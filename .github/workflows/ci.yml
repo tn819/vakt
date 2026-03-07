@@ -1,0 +1,62 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate JSON files
+        run: |
+          for file in $(find . -name "*.json" -type f); do
+            python3 -m json.tool "$file" > /dev/null || (echo "Invalid JSON: $file" && exit 1)
+          done
+
+      - name: Validate shell scripts syntax
+        run: |
+          for file in $(find . -name "*.sh" -type f); do
+            bash -n "$file" || (echo "Syntax error in: $file" && exit 1)
+          done
+
+      - name: Check skill files
+        run: |
+          for skill_dir in skills/*/; do
+            [ -f "$skill_dir/SKILL.md" ] || (echo "Missing SKILL.md in $skill_dir" && exit 1)
+            grep -q "^---" "$skill_dir/SKILL.md" || (echo "Missing YAML frontmatter in $skill_dir/SKILL.md" && exit 1)
+          done
+
+      - name: Check required files exist
+        run: |
+          required_files=(
+            "README.md"
+            "install.sh"
+            "src/agentctl.sh"
+            "src/lib/secrets.sh"
+            "src/commands/sync.sh"
+            "AGENTS.md"
+          )
+
+          for file in "${required_files[@]}"; do
+            [ -f "$file" ] || (echo "Missing required file: $file" && exit 1)
+          done
+
+      - name: Check installer script
+        run: |
+          chmod +x install.sh
+          grep -q "#!/usr/bin/env bash" install.sh
+          grep -q "curl" install.sh || grep -q "git clone" install.sh
+
+  dependency-review:
+    runs-on: ubuntu-latest
+    if: github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Dependency Review
+        uses: actions/dependency-review-action@v3
+        continue-on-error: true

@@ -1,0 +1,124 @@
+name: Tests
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  test-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install bats
+        run: npm install
+
+      - name: Run tests
+        run: |
+          export PATH="$PWD/src:$PATH"
+          npx bats tests/
+
+      - name: Test CLI commands
+        run: |
+          export PATH="$PWD/src:$PATH"
+          export AGENTS_DIR="$HOME/.agents-test"
+
+          # Test init
+          agentctl.sh init
+          [ -d "$AGENTS_DIR" ]
+          [ -f "$AGENTS_DIR/config.json" ]
+
+          # Test config
+          agentctl.sh config list
+          agentctl.sh config set paths.code ~/Projects
+
+          # Test secrets (env backend)
+          agentctl.sh secrets set TEST_KEY "test_value"
+          [ "$(agentctl.sh secrets get TEST_KEY)" = "test_value" ]
+
+          # Test add-server
+          agentctl.sh add-server test npx -y test-mcp
+          agentctl.sh list servers | grep -q "test"
+
+          # Test list
+          agentctl.sh list
+
+  test-linux:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install bats
+        run: npm install
+
+      - name: Run tests
+        run: |
+          export PATH="$PWD/src:$PATH"
+          npx bats tests/
+
+      - name: Test CLI commands
+        run: |
+          export PATH="$PWD/src:$PATH"
+          export AGENTS_DIR="$HOME/.agents-test"
+
+          # Test init
+          agentctl.sh init
+          [ -d "$AGENTS_DIR" ]
+          [ -f "$AGENTS_DIR/config.json" ]
+
+          # Test config
+          agentctl.sh config list
+          agentctl.sh config set paths.code ~/Projects
+
+          # Test secrets (env backend since no pass)
+          agentctl.sh secrets set TEST_KEY "test_value"
+          [ "$(agentctl.sh secrets get TEST_KEY)" = "test_value" ]
+
+          # Test add-server
+          agentctl.sh add-server test npx -y test-mcp
+          agentctl.sh list servers | grep -q "test"
+
+          # Test list
+          agentctl.sh list
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check shell scripts
+        run: |
+          find . -name "*.sh" -type f -exec bash -n {} \;
+
+      - name: Check Python syntax
+        run: |
+          python3 -m py_compile $(find . -name "*.py" -type f) 2>/dev/null || true
+
+      - name: Check for TODO/FIXME
+        run: |
+          ! grep -r "TODO\|FIXME" src/ --include="*.sh" || (echo "Found TODO/FIXME comments" && exit 1)
+
+  security-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for hardcoded secrets
+        run: |
+          # Check for actual hardcoded credential values, not function names
+          ! grep -rE "(password|token|api_key|secret)\s*=\s*['\"][^'\"]{10,}['\"]" src/ --include="*.sh" || (echo "Found hardcoded credentials" && exit 1)
+          ! grep -rE "(ghp|gho|github_pat)_[a-zA-Z0-9]{36}" src/ --include="*.sh" || (echo "Found hardcoded GitHub tokens" && exit 1)
+
+      - name: Check file permissions
+        run: |
+          # Find world-writable files (excluding .git directory)
+          # Exit 0 if no files found, exit 1 if any found
+          world_writable=$(find . -type f -perm -002 -not -path "./.git/*" 2>/dev/null)
+          if [ -n "$world_writable" ]; then
+            echo "Found world-writable files:"
+            echo "$world_writable"
+            exit 1
+          fi
+          echo "✓ No world-writable files found"

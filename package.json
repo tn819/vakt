@@ -1,0 +1,21 @@
+{
+  "name": "agentctl",
+  "version": "0.0.0",
+  "description": "Provider-agnostic MCP server and skills manager",
+  "scripts": {
+    "test": "bats tests/",
+    "pretest": "chmod +x src/agentctl.sh"
+  },
+  "devDependencies": {
+    "@semantic-release/changelog": "^6.0.3",
+    "@semantic-release/exec": "^6.0.3",
+    "@semantic-release/git": "^10.0.1",
+    "@semantic-release/github": "^9.2.6",
+    "semantic-release": "^24.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/tn819/agentctl.git"
+  },
+  "packageManager": "pnpm@10.30.3+sha512.c961d1e0a2d8e354ecaa5166b822516668b7f44cb5bd95122d590dd81922f606f5473b6d23ec4a5be05e7fcd18e8488d47d978bbe981872f1145d06e9a740017"
+}
