@@ -247,32 +247,39 @@ Before releasing:
 - [ ] Version bumped in `src/agentctl.sh`
 - [ ] CHANGELOG.md updated with new version section
 
-### Release Process (UI-based)
+### Release Process (Automated)
 
-1. Go to **Actions** tab on GitHub
-2. Select **Release** workflow
-3. Click **Run workflow**
-4. Enter version (e.g., `v0.0.2`)
-5. Click **Run workflow**
+Releases are **fully automated** using semantic-release:
 
-Workflow will:
-- Run tests on `develop` branch
-- Merge `develop` → `main`
-- Create GitHub Release with changelog
-- Upload tarball
+1. Make commits with conventional commit messages:
+   - `feat:` → minor version bump (0.1.0)
+   - `fix:` → patch version bump (0.0.2)
+   - `chore:`, `docs:`, `refactor:` → patch bump
 
-### Manual Release (CLI)
+2. Create PR to `main` branch
+
+3. When PR merges:
+   - Tests run automatically
+   - Semantic-release analyzes commits
+   - Version is bumped automatically
+   - CHANGELOG.md is generated
+   - GitHub release is created
+   - Tarball is uploaded
+
+**No manual steps required!**
+
+### Manual Release (Emergency Only)
+
+If semantic-release fails:
 
 ```bash
-git checkout develop
-# Update version in src/agentctl.sh
-# Update CHANGELOG.md
-git add -A && git commit -m "chore: release v0.0.2"
-git push origin develop
-
-# Create tag to trigger release
-git tag v0.0.2
-git push origin v0.0.2
+# Create PR with conventional commit message
+git checkout -b fix/release-issue
+# Make fixes
+git commit -m "fix: resolve release issue"
+git push origin fix/release-issue
+gh pr create --base main
+# Merge PR, semantic-release will trigger
 ```
 
 ## Common Patterns
