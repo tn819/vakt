@@ -50,7 +50,7 @@
   "prepare": [
     {
       "path": "@semantic-release/exec",
-      "cmd": "tar -czf agentctl-${nextRelease.version}.tar.gz --exclude='.git' --exclude='tests' --exclude='.github' --exclude='*.md' --exclude='.gitignore' ."
+      "cmd": "tar --exclude='agentctl-*.tar.gz' -czf agentctl-${nextRelease.version}.tar.gz --exclude='.git' --exclude='tests' --exclude='.github' --exclude='*.md' --exclude='.gitignore' --exclude='node_modules' ."
     },
     {
       "path": "@semantic-release/exec",
