@@ -67,6 +67,7 @@ bats tests/e2e/init.bats -f "init creates ~/.agents/ directory"
 ```
 tests/
 ├── test_helper.bash      # Shared test utilities and assertions
+├── generate_provider_tests.py  # Auto-generates e2e/generated/ from providers.json
 ├── e2e/                  # End-to-end tests
 │   ├── init.bats        # Tests for init command
 │   ├── secrets.bats     # Tests for secrets management
@@ -74,9 +75,26 @@ tests/
 │   ├── add-server.bats  # Tests for add-server command
 │   ├── add-skill.bats   # Tests for add-skill command
 │   ├── list.bats        # Tests for list command
-│   └── sync.bats        # Tests for sync command
+│   ├── sync.bats        # Tests for sync command (core)
+│   └── generated/       # Auto-generated provider sync tests (git-ignored)
+│       ├── sync-opencode.bats
+│       ├── sync-claude.bats
+│       ├── sync-gemini.bats
+│       ├── sync-codex.bats
+│       ├── sync-cursor.bats
+│       └── sync-windsurf.bats
 └── README.md            # This file
 ```
+
+### Regenerating provider tests
+
+Provider tests in `e2e/generated/` are auto-generated from `src/providers.json`. Run:
+
+```bash
+python3 tests/generate_provider_tests.py
+```
+
+This ensures 100% provider coverage with no manual maintenance. Adding a provider to `providers.json` automatically produces a full test suite for it.
 
 ## Test Isolation
 
@@ -215,7 +233,22 @@ Current test coverage by command:
 | list       | 14    | ✅ Complete |
 | sync       | 14    | ✅ Complete |
 
-**Total: 87 tests**
+**Subtotal (hand-written): 87 tests**
+
+Provider sync coverage (auto-generated from `src/providers.json`):
+
+| Provider  | Tests | Source                          |
+| --------- | ----- | ------------------------------- |
+| opencode  | 9     | `generated/sync-opencode.bats`  |
+| claude    | 9     | `generated/sync-claude.bats`    |
+| gemini    | 9     | `generated/sync-gemini.bats`    |
+| codex     | 9     | `generated/sync-codex.bats`     |
+| cursor    | 9     | `generated/sync-cursor.bats`    |
+| windsurf  | 9     | `generated/sync-windsurf.bats`  |
+
+**Subtotal (generated): 54 tests**
+
+**Total: 141 tests**
 
 ## Contributing
 

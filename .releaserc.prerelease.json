@@ -1,5 +1,8 @@
 {
-  "branches": ["main"],
+  "branches": [
+    "+([0-9]).x",
+    { "name": "main", "prerelease": "beta" }
+  ],
   "tagFormat": "v${version}",
   "plugins": [
     [
@@ -7,7 +10,6 @@
       {
         "preset": "conventionalcommits",
         "releaseRules": [
-          { "breaking": true, "release": "minor" },
           { "type": "feat", "release": "minor" },
           { "type": "fix", "release": "patch" },
           { "type": "perf", "release": "patch" },

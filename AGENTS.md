@@ -268,6 +268,21 @@ Releases are **fully automated** using semantic-release:
 
 **No manual steps required!**
 
+### Pre-release Mode
+
+By default, the repo stays in **pre-release** until you graduate to stable:
+
+- Releases from `main` are tagged as pre-release on GitHub (e.g. `v1.0.0-beta.1`)
+- Package maintainers can install via `v1.0.0-beta.1` while signaling the release is not production-ready
+
+**To graduate to stable releases:**
+
+1. Go to **Settings → Secrets and variables → Actions** in your GitHub repo
+2. Add or update repository variable: `RELEASE_CHANNEL` = `stable`
+3. Future merges to `main` will produce stable releases (e.g. `v1.0.0`)
+
+To return to pre-release, set `RELEASE_CHANNEL` to any other value (or remove it).
+
 ### Manual Release (Emergency Only)
 
 If semantic-release fails:

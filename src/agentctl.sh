@@ -55,10 +55,10 @@ init() {
   echo -e "\033[1mInitializing ~/.agents/\033[0m"
   echo ""
   
-  if [[ -d "$AGENTS_DIR" ]]; then
+  if [[ -f "$AGENTS_DIR/config.json" ]]; then
     echo -e "  \033[33m⚠\033[0m $AGENTS_DIR already exists"
     if [[ "$dry_run" == "false" ]]; then
-      read -p "  Overwrite? [y/N] " -n 1 -r
+      read -p "  Reinitialize? [y/N] " -n 1 -r
       echo
       if [[ ! $REPLY =~ ^[Yy]$ ]]; then
         echo "  Aborted."
@@ -134,6 +134,18 @@ AGENTS
   echo -e "  \033[32m✓\033[0m Created $AGENTS_DIR/config.json"
   echo -e "  \033[32m✓\033[0m Created $AGENTS_DIR/AGENTS.md"
   echo -e "  \033[32m✓\033[0m Created $AGENTS_DIR/skills/"
+  echo ""
+
+  local _resolver="$SCRIPT_DIR/lib/config_resolver.py"
+  if python3 "$_resolver" \
+      --agents-dir "$AGENTS_DIR" \
+      --mcp-config "$AGENTS_DIR/mcp-config.json" \
+      --user-config "$AGENTS_DIR/config.json" \
+      --action validate 2>/dev/null; then
+    true
+  else
+    echo -e "  \033[33m⚠\033[0m Some secret references are not yet set (this is expected)"
+  fi
   echo ""
   echo -e "Next steps:"
   echo -e "  1. Edit \033[36m~/.agents/config.json\033[0m to set your paths"

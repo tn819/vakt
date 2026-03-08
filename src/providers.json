@@ -1,0 +1,219 @@
+{
+  "$schema": "https://github.com/gleanwork/mcp-config/blob/main/packages/mcp-config-schema/README.md",
+  "_comment": "Provider registry for agentctl. Schema aligned with @gleanwork/mcp-config-schema configStructure convention.",
+
+  "opencode": {
+    "id": "opencode",
+    "displayName": "OpenCode",
+    "detectCommand": "opencode",
+    "documentationUrl": "https://opencode.ai/docs/mcp-servers/",
+    "transports": ["stdio", "http"],
+    "supportedPlatforms": ["darwin", "linux", "win32"],
+    "configFormat": "json",
+    "configPath": {
+      "darwin": "$HOME/.config/opencode/opencode.json",
+      "linux": "$HOME/.config/opencode/opencode.json",
+      "win32": "%USERPROFILE%\\.config\\opencode\\opencode.json"
+    },
+    "configStructure": {
+      "serversPropertyName": "mcp",
+      "httpPropertyMapping": {
+        "typeProperty": "type",
+        "typeValue": "remote",
+        "urlProperty": "url",
+        "headersProperty": "headers"
+      },
+      "stdioPropertyMapping": {
+        "typeProperty": "type",
+        "typeValue": "local",
+        "commandProperty": "command",
+        "argsProperty": "command",
+        "envProperty": "environment"
+      }
+    },
+    "skills": {
+      "path": {
+        "darwin": "$HOME/.config/opencode/skills",
+        "linux": "$HOME/.config/opencode/skills",
+        "win32": "%USERPROFILE%\\.config\\opencode\\skills"
+      },
+      "method": "symlink"
+    }
+  },
+
+  "claude": {
+    "id": "claude",
+    "displayName": "Claude Code",
+    "detectCommand": "claude",
+    "documentationUrl": "https://code.claude.com/docs/en/mcp",
+    "transports": ["stdio", "http"],
+    "supportedPlatforms": ["darwin", "linux", "win32"],
+    "configFormat": "cli",
+    "configPath": {
+      "darwin": "$HOME/.claude.json",
+      "linux": "$HOME/.claude.json",
+      "win32": "%USERPROFILE%\\.claude.json"
+    },
+    "configStructure": {
+      "serversPropertyName": "mcpServers",
+      "httpPropertyMapping": {
+        "typeProperty": "type",
+        "urlProperty": "url",
+        "headersProperty": "headers"
+      },
+      "stdioPropertyMapping": {
+        "typeProperty": "type",
+        "commandProperty": "command",
+        "argsProperty": "args",
+        "envProperty": "env"
+      }
+    },
+    "skills": {
+      "path": {
+        "darwin": "$HOME/.claude/skills",
+        "linux": "$HOME/.claude/skills",
+        "win32": "%USERPROFILE%\\.claude\\skills"
+      },
+      "method": "symlink"
+    }
+  },
+
+  "gemini": {
+    "id": "gemini",
+    "displayName": "Gemini CLI",
+    "detectCommand": "gemini",
+    "documentationUrl": "https://geminicli.com/docs/tools/mcp-server/",
+    "transports": ["stdio", "http"],
+    "supportedPlatforms": ["darwin", "linux", "win32"],
+    "configFormat": "json",
+    "configPath": {
+      "darwin": "$HOME/.gemini/settings.json",
+      "linux": "$HOME/.gemini/settings.json",
+      "win32": "%USERPROFILE%\\.gemini\\settings.json"
+    },
+    "configStructure": {
+      "serversPropertyName": "mcpServers",
+      "httpPropertyMapping": {
+        "urlProperty": "httpUrl",
+        "headersProperty": "headers"
+      },
+      "stdioPropertyMapping": {
+        "commandProperty": "command",
+        "argsProperty": "args",
+        "envProperty": "env"
+      }
+    },
+    "skills": {
+      "path": "$HOME/.agents/skills",
+      "method": "native",
+      "_comment": "Gemini CLI reads ~/.agents/skills natively — no symlink needed"
+    }
+  },
+
+  "codex": {
+    "id": "codex",
+    "displayName": "Codex",
+    "detectCommand": "codex",
+    "documentationUrl": "https://developers.openai.com/codex/mcp",
+    "transports": ["stdio", "http"],
+    "supportedPlatforms": ["darwin", "linux", "win32"],
+    "configFormat": "toml",
+    "configPath": {
+      "darwin": "$HOME/.codex/config.toml",
+      "linux": "$HOME/.codex/config.toml",
+      "win32": "%USERPROFILE%\\.codex\\config.toml"
+    },
+    "configStructure": {
+      "serversPropertyName": "mcp_servers",
+      "httpPropertyMapping": {
+        "urlProperty": "url",
+        "headersProperty": "http_headers"
+      },
+      "stdioPropertyMapping": {
+        "commandProperty": "command",
+        "argsProperty": "args",
+        "envProperty": "env"
+      }
+    },
+    "skills": {
+      "path": {
+        "darwin": "$HOME/.codex/skills",
+        "linux": "$HOME/.codex/skills",
+        "win32": "%USERPROFILE%\\.codex\\skills"
+      },
+      "method": "symlink"
+    }
+  },
+
+  "cursor": {
+    "id": "cursor",
+    "displayName": "Cursor",
+    "detectCommand": "cursor",
+    "documentationUrl": "https://cursor.com/docs/context/mcp",
+    "transports": ["stdio", "http"],
+    "supportedPlatforms": ["darwin", "linux", "win32"],
+    "configFormat": "json",
+    "configPath": {
+      "darwin": "$HOME/.cursor/mcp.json",
+      "linux": "$HOME/.cursor/mcp.json",
+      "win32": "%USERPROFILE%\\.cursor\\mcp.json"
+    },
+    "configStructure": {
+      "serversPropertyName": "mcpServers",
+      "httpPropertyMapping": {
+        "typeProperty": "type",
+        "urlProperty": "url",
+        "headersProperty": "headers"
+      },
+      "stdioPropertyMapping": {
+        "typeProperty": "type",
+        "commandProperty": "command",
+        "argsProperty": "args",
+        "envProperty": "env"
+      }
+    },
+    "skills": {
+      "path": {
+        "darwin": "$HOME/.cursor/skills",
+        "linux": "$HOME/.cursor/skills",
+        "win32": "%USERPROFILE%\\.cursor\\skills"
+      },
+      "method": "symlink"
+    }
+  },
+
+  "windsurf": {
+    "id": "windsurf",
+    "displayName": "Windsurf",
+    "detectCommand": "windsurf",
+    "documentationUrl": "https://docs.windsurf.com/windsurf/cascade/mcp",
+    "transports": ["stdio", "http"],
+    "supportedPlatforms": ["darwin", "linux", "win32"],
+    "configFormat": "json",
+    "configPath": {
+      "darwin": "$HOME/.codeium/windsurf/mcp_config.json",
+      "linux": "$HOME/.codeium/windsurf/mcp_config.json",
+      "win32": "%USERPROFILE%\\.codeium\\windsurf\\mcp_config.json"
+    },
+    "configStructure": {
+      "serversPropertyName": "mcpServers",
+      "httpPropertyMapping": {
+        "urlProperty": "serverUrl",
+        "headersProperty": "headers"
+      },
+      "stdioPropertyMapping": {
+        "commandProperty": "command",
+        "argsProperty": "args",
+        "envProperty": "env"
+      }
+    },
+    "skills": {
+      "path": {
+        "darwin": "$HOME/.codeium/windsurf/skills",
+        "linux": "$HOME/.codeium/windsurf/skills",
+        "win32": "%USERPROFILE%\\.codeium\\windsurf\\skills"
+      },
+      "method": "symlink"
+    }
+  }
+}
