@@ -5,6 +5,7 @@ yarn.lock
 
 # Test artifacts
 tests/test_results/
+tests/e2e/generated/
 *.tap
 .bats/
 

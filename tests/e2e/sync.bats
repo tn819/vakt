@@ -23,7 +23,7 @@ teardown() {
   run agentctl sync --dry-run
   
   [ "$status" -eq 0 ]
-  [[ "$output" == *"dry-run"* ]] || [[ "$output" == *"Would"* ]]
+  [[ "$output" == *"DRY RUN"* ]] || [[ "$output" == *"dry-run"* ]] || [[ "$output" == *"Would"* ]]
 }
 
 @test "sync --mcp-only skips skills" {

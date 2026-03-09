@@ -268,6 +268,10 @@ Releases are **fully automated** using semantic-release:
 
 **No manual steps required!**
 
+### Pre-1.0.0 Versioning
+
+This repo is configured so that **even breaking changes only trigger a minor bump** while the version is `< 1.0.0`. That prevents semantic-release from accidentally jumping to `1.0.0` until you explicitly change the release rules in `.releaserc.json` to allow major releases.
+
 ### Manual Release (Emergency Only)
 
 If semantic-release fails:
