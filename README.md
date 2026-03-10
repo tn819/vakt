@@ -116,6 +116,21 @@ At sync time, `secret:GITHUB_TOKEN` is resolved from your keychain and written i
 
 **Backends:** macOS Keychain · `pass` / GPG (Linux) · base64 env file (CI / fallback)
 
+### Runtime log security with crust
+
+agentctl secures the **configuration layer** — secrets never reach a config file. But MCP servers can still leak sensitive data at runtime: a tool response that echoes back an API key, a log line that includes a token, an agent that exfiltrates data through a seemingly innocuous output.
+
+[**crust**](https://github.com/BakeLens/crust) covers the **runtime layer**. It wraps any MCP server as a stdio proxy, intercepting JSON-RPC traffic in both directions and scanning it against 34 built-in DLP patterns before it reaches the agent or gets written to logs. Security-relevant events are stored in local encrypted storage for audit.
+
+Together they form a complete security posture:
+
+| Layer | Tool | What it protects |
+|-------|------|-----------------|
+| Configuration | **agentctl** | Secrets never written to config files or `~/.agents/` |
+| Runtime / logs | **[crust](https://github.com/BakeLens/crust)** | Secrets and sensitive data scrubbed from MCP traffic and logs |
+
+To wrap an MCP server with crust, reference it in `mcp-config.json` via crust's stdio proxy — your credentials stay in the keychain via agentctl, and crust intercepts any runtime leakage before it lands in logs.
+
 ---
 
 ## 📐 Standardization in depth
