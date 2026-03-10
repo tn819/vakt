@@ -36,7 +36,7 @@ async function syncProviderMcp(
       warn(`secret '${k}' not found — set it with: agentctl secrets set ${k}`);
   }
 
-  if (provider.configFormat === "cli") {
+  if (provider.syncMethod === "cli") {
     // Claude Code: use `claude mcp add` CLI
     if (dryRun) { info(`[dry-run] Would run claude mcp add/remove`); return; }
     // Get existing claude mcp list

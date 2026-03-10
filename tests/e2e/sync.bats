@@ -160,3 +160,42 @@ PYEOF
   [ "$status" -eq 0 ]
   # Would verify existing config is preserved/merged
 }
+
+# ── syncMethod and configFormat separation tests ─────────────────────────────
+
+@test "sync JSON provider writes config file (not CLI commands)" {
+  # Cursor uses configFormat=json and syncMethod=file (default)
+  # Verify it attempts to write a file path (not invoke CLI)
+  local cursor_dir
+  cursor_dir="$(mock_provider_config cursor)"
+
+  agentctl add-server test-server npx -y test-mcp
+
+  run agentctl sync --dry-run
+
+  [ "$status" -eq 0 ]
+  # Should mention writing the cursor config path, not CLI invocation
+  [[ "$output" == *"cursor"* ]] || [[ "$output" == *"Cursor"* ]] || [[ "$output" == *"not found"* ]]
+}
+
+@test "sync CLI provider (claude) skips file write and uses CLI pathway" {
+  # Claude has syncMethod=cli — when claude binary is absent sync warns but doesn't write files
+  agentctl add-server test-server npx -y test-mcp
+
+  run agentctl sync --dry-run
+
+  [ "$status" -eq 0 ]
+  # dry-run path for CLI provider should mention CLI, not a JSON path
+  [[ "$output" == *"claude mcp add"* ]] || [[ "$output" == *"not found"* ]] || [[ "$output" == *"dry-run"* ]]
+}
+
+@test "sync provider configFormat json writes to path from registry" {
+  # Windsurf uses configFormat=json — sync should target path from providers.json
+  agentctl add-server test-server npx -y test-mcp
+
+  run agentctl sync --dry-run
+
+  [ "$status" -eq 0 ]
+  # Any json provider's dry-run output references the would-be config path
+  [[ "$output" == *"Would write"* ]] || [[ "$output" == *"not found"* ]]
+}

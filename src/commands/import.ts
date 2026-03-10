@@ -8,7 +8,6 @@ import type { McpServer } from "../lib/schemas";
 const mcpPath = join(AGENTS_DIR, "mcp-config.json");
 
 function parseTOML(content: string): Record<string, Record<string, unknown>> {
-  // Minimal TOML parser for [section] and key = value
   const result: Record<string, Record<string, unknown>> = {};
   let currentSection = "";
   for (const line of content.split("\n")) {
@@ -27,17 +26,16 @@ function parseTOML(content: string): Record<string, Record<string, unknown>> {
   return result;
 }
 
-function extractServersFromProviderConfig(
-  configPath: string,
+function extractServersFromFile(
+  filePath: string,
   serversKey: string,
   format: "json" | "toml"
 ): Record<string, McpServer> {
-  if (!existsSync(configPath)) return {};
+  if (!existsSync(filePath)) return {};
   try {
-    const content = readFileSync(configPath, "utf-8");
+    const content = readFileSync(filePath, "utf-8");
     const parsed = format === "json" ? JSON.parse(content) : parseTOML(content);
     const servers = parsed[serversKey] ?? {};
-    // Normalise: detect http vs stdio
     const result: Record<string, McpServer> = {};
     for (const [name, raw] of Object.entries(servers as Record<string, unknown>)) {
       const r = raw as Record<string, unknown>;
@@ -49,7 +47,6 @@ function extractServersFromProviderConfig(
         };
       } else {
         const cmdRaw = r["command"];
-        // Some providers combine command+args in a single array
         const command = Array.isArray(cmdRaw) ? (cmdRaw[0] as string) : (cmdRaw as string);
         const args = Array.isArray(cmdRaw) ? cmdRaw.slice(1) as string[]
           : Array.isArray(r["args"]) ? r["args"] as string[] : undefined;
@@ -65,6 +62,21 @@ function extractServersFromProviderConfig(
   } catch { return {}; }
 }
 
+function mergeServers(
+  existing: Record<string, McpServer>,
+  incoming: Record<string, McpServer>,
+  source: string
+): number {
+  let imported = 0;
+  for (const [name, server] of Object.entries(incoming)) {
+    if (existing[name]) { console.log(`  · skipped (exists): ${name}`); continue; }
+    existing[name] = server;
+    console.log(`  ✓  imported: ${name} (from ${source})`);
+    imported++;
+  }
+  return imported;
+}
+
 export function registerImport(program: Command): void {
   program
     .command("import-from-everywhere")
@@ -73,57 +85,32 @@ export function registerImport(program: Command): void {
       const existing = loadMcpConfig();
       const providers = loadProviders();
       let imported = 0;
+      const platform = process.platform;
 
       for (const provider of Object.values(providers)) {
-        if (provider.configFormat === "cli") continue; // Claude handled separately below
+        const format = provider.configFormat;
         const configPath = resolveProviderConfigPath(provider);
-        const format = provider.configFormat === "toml" ? "toml" : "json";
-        const servers = extractServersFromProviderConfig(
+
+        // Primary config path
+        const servers = extractServersFromFile(
           configPath,
           provider.configStructure.serversPropertyName,
           format
         );
-        for (const [name, server] of Object.entries(servers)) {
-          if (existing[name]) { console.log(`  · skipped (exists): ${name}`); continue; }
-          existing[name] = server;
-          console.log(`  ✓  imported: ${name} (from ${provider.displayName})`);
-          imported++;
-        }
-      }
+        imported += mergeServers(existing, servers, provider.displayName);
 
-      // Also read ~/.claude.json (Claude global config)
-      const dotClaudeJson = join(process.env["HOME"] ?? "~", ".claude.json");
-      if (existsSync(dotClaudeJson)) {
-        const servers = extractServersFromProviderConfig(dotClaudeJson, "mcpServers", "json");
-        for (const [name, server] of Object.entries(servers)) {
-          if (existing[name]) continue;
-          existing[name] = server;
-          console.log(`  ✓  imported: ${name} (from ~/.claude.json)`);
-          imported++;
-        }
-      }
-
-      // Also read ~/.claude/claude.json (Claude Code per-user config)
-      const claudeDirJson = join(process.env["HOME"] ?? "~", ".claude", "claude.json");
-      if (existsSync(claudeDirJson)) {
-        const servers = extractServersFromProviderConfig(claudeDirJson, "mcpServers", "json");
-        for (const [name, server] of Object.entries(servers)) {
-          if (existing[name]) continue;
-          existing[name] = server;
-          console.log(`  ✓  imported: ${name} (from ~/.claude/claude.json)`);
-          imported++;
-        }
-      }
-
-      // Also read ~/.mcp.json (Claude project-level convention)
-      const dotMcp = join(process.env["HOME"] ?? "~", ".mcp.json");
-      if (existsSync(dotMcp)) {
-        const servers = extractServersFromProviderConfig(dotMcp, "mcpServers", "json");
-        for (const [name, server] of Object.entries(servers)) {
-          if (existing[name]) continue;
-          existing[name] = server;
-          console.log(`  ✓  imported: ${name} (from ~/.mcp.json)`);
-          imported++;
+        // Additional import paths (e.g. per-user alternate locations)
+        const extraPaths = provider.additionalImportPaths?.[platform]
+          ?? provider.additionalImportPaths?.["linux"]
+          ?? [];
+        for (const rawPath of extraPaths) {
+          const extra = expandHome(rawPath.replace("$HOME", process.env["HOME"] ?? "~"));
+          const extraServers = extractServersFromFile(
+            extra,
+            provider.configStructure.serversPropertyName,
+            format
+          );
+          imported += mergeServers(existing, extraServers, `${provider.displayName} (${extra})`);
         }
       }
 
@@ -132,7 +119,7 @@ export function registerImport(program: Command): void {
       for (const provider of Object.values(providers)) {
         const rawPath = typeof provider.skills.path === "string"
           ? provider.skills.path
-          : (provider.skills.path as Record<string, string>)[process.platform] ?? "";
+          : (provider.skills.path as Record<string, string>)[platform] ?? "";
         if (!rawPath) continue;
         const skillsSource = expandHome(rawPath);
         if (!existsSync(skillsSource) || skillsSource === skillsTarget) continue;

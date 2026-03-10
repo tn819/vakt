@@ -44,7 +44,9 @@ export const ProviderSchema = z.object({
   documentationUrl: z.string().optional(),
   transports: z.array(z.enum(["stdio", "http"])),
   supportedPlatforms: z.array(z.string()),
-  configFormat: z.enum(["json", "toml", "cli"]),
+  configFormat: z.enum(["json", "toml"]),
+  syncMethod: z.enum(["file", "cli"]).default("file"),
+  additionalImportPaths: z.record(z.array(z.string())).optional(),
   configPath: z.record(z.string()),
   configStructure: z.object({
     serversPropertyName: z.string(),
