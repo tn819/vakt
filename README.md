@@ -1,9 +1,9 @@
 # agentctl
 
-> One config. Every AI tool. Zero credential exposure.
+> Build your MCP servers, skills, and config once. Use them in every AI coding tool — securely, portably, forever.
 
 ```
- your mcps & skills
+ build once
   ┌────────────────┐
   │  ~/.agents/    │
   │  mcp-config    │──► Claude Code   ~/.claude.json
@@ -14,9 +14,9 @@
                    └──► Windsurf      ~/.codeium/windsurf/mcp_config.json
 ```
 
-The agent CLI landscape is fragmented. Every tool invented its own config format, its own secrets story, its own place to drop skills. You copy-paste MCP server definitions across six files, scatter API keys in plaintext JSON, and start over every time a new tool ships.
+Building a good MCP server takes real work — authentication, tool design, testing. Building a useful skill takes iteration. The AI tool ecosystem repays that effort by scattering it: different config formats, different secrets stories, different skill directories. Your carefully crafted GitHub MCP lives in Cursor but not Gemini. Your SQL reviewer skill works in Claude Code but not Windsurf. You rebuild the same thing, slightly differently, every time a new tool ships.
 
-**agentctl is the missing standard layer.** One directory (`~/.agents/`) is your single source of truth, aligned to open specs. Secrets live in your OS keychain and nowhere else. Skills and servers are instantly portable across every tool you use today and every tool that ships tomorrow.
+**agentctl ends that.** Configure it once in `~/.agents/` and it instantly works everywhere — with zero plaintext credentials and a single canonical schema that any current or future provider can read.
 
 ---
 
@@ -34,9 +34,9 @@ Every provider uses a different shape for the same data. Cursor wants `mcpServer
 
 agentctl defines a single canonical schema for MCP servers and translates to each provider's format at sync time. You write config once. The translation layer handles the rest — today and when new providers ship.
 
-### 🔗 Interoperability — switch tools without losing context
+### 🔗 Interoperability — the work you put in travels with you
 
-Skills, server definitions, and preferences are stored in `~/.agents/` against open formats, not inside any vendor's directory. `agentctl sync` populates every installed tool from the same source. `agentctl import-from-everywhere` reads any tool's existing config and consolidates it. Your setup is fully portable across CLIs, machines, and teammates.
+Building a good MCP integration or skill is an investment. agentctl makes sure that investment pays off everywhere, not just in the tool you happened to be using when you built it. Skills, server definitions, and preferences live in `~/.agents/` in open formats — not locked inside any vendor's directory. `agentctl sync` populates every installed tool instantly. `agentctl import-from-everywhere` consolidates anything you've already built. Your setup is fully portable across CLIs, machines, and teammates.
 
 ---
 
@@ -60,11 +60,12 @@ On first run, `init` auto-detects your existing Claude, Cursor, Gemini, and othe
 
 | Problem | How agentctl solves it |
 |---|---|
-| MCP config scattered across 6 tools | Single `~/.agents/mcp-config.json` synced everywhere |
+| Built a great MCP server — only works in one tool | `agentctl sync` instantly deploys it to every installed CLI |
+| Spent hours perfecting a skill — not portable | Symlinked from `~/.agents/skills/` into every provider |
+| New AI tool ships — start over from scratch | One sync command, full context, zero setup |
+| MCP config scattered and duplicated across 6 tools | Single `~/.agents/mcp-config.json` as source of truth |
 | API keys in plaintext JSON files | Resolved from OS keychain at sync time, never persisted |
 | Every tool uses a different config format | Canonical schema with per-provider translation layer |
-| Skills only work in one tool | Symlinked into every provider's skills directory |
-| Starting over when trying a new CLI | `agentctl sync` populates any new tool instantly |
 | Config tied to a single machine | `~/.agents/` is safe to version-control and share — no secrets inside |
 | Can't audit what credentials you've handed to AI tools | Every secret is a named reference — full visibility, zero exposure |
 
