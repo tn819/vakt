@@ -4,27 +4,7 @@ import { existsSync, readdirSync, lstatSync, readFileSync } from "fs";
 import type { Command } from "commander";
 import { AGENTS_DIR, loadMcpConfig, loadProviders, resolveProviderConfigPath, expandHome } from "../lib/config";
 import { PLATFORMS, RawProviderServerSchema, type McpServer, type PlatformKey } from "../lib/schemas";
-
-const mcpPath = join(AGENTS_DIR, "mcp-config.json");
-
-function parseTOML(content: string): Record<string, Record<string, unknown>> {
-  const result: Record<string, Record<string, unknown>> = {};
-  let currentSection = "";
-  for (const line of content.split("\n")) {
-    const trimmed = line.trim();
-    if (!trimmed || trimmed.startsWith("#")) continue;
-    const sectionMatch = trimmed.match(/^\[([^\]]+)\]$/);
-    if (sectionMatch) { currentSection = sectionMatch[1]!; result[currentSection] = {}; continue; }
-    if (currentSection) {
-      const kv = trimmed.match(/^(\w+)\s*=\s*(.+)$/);
-      if (kv) {
-        try { result[currentSection]![kv[1]!] = JSON.parse(kv[2]!); }
-        catch { result[currentSection]![kv[1]!] = kv[2]!.replace(/^["']|["']$/g, ""); }
-      }
-    }
-  }
-  return result;
-}
+import { parse as parseToml } from "smol-toml";
 
 function extractServersFromFile(
   filePath: string,
@@ -34,7 +14,9 @@ function extractServersFromFile(
   if (!existsSync(filePath)) return {};
   try {
     const content = readFileSync(filePath, "utf-8");
-    const parsed = format === "json" ? JSON.parse(content) : parseTOML(content);
+    const parsed = format === "json"
+      ? JSON.parse(content) as Record<string, unknown>
+      : parseToml(content) as Record<string, unknown>;
     const servers = parsed[serversKey] ?? {};
     const result: Record<string, McpServer> = {};
     for (const [name, raw] of Object.entries(servers as Record<string, unknown>)) {
@@ -84,6 +66,7 @@ export function registerImport(program: Command): void {
     .command("import-from-everywhere")
     .description("Import MCP servers and skills from all detected provider configs")
     .action(async () => {
+      const mcpPath = join(AGENTS_DIR, "mcp-config.json");
       const existing = loadMcpConfig();
       const providers = loadProviders();
       let imported = 0;

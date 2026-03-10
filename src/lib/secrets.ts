@@ -1,5 +1,6 @@
 import { join } from "path";
 import { existsSync, chmodSync, readFileSync } from "fs";
+import { spawnSync } from "child_process";
 import { AGENTS_DIR } from "./config";
 
 type Backend = "keychain" | "pass" | "env";
@@ -13,10 +14,17 @@ async function run(cmd: string, args: string[]): Promise<{ stdout: string; ok: b
   return { stdout: stdout.trim(), ok };
 }
 
+function keychainAccessible(): boolean {
+  // Test keychain accessibility with a read-only operation that never shows a dialog.
+  // 'security list-keychains' exits 0 and returns paths when the login keychain is reachable.
+  const result = spawnSync("security", ["list-keychains"], { encoding: "utf-8", timeout: 2000 });
+  return result.status === 0 && typeof result.stdout === "string" && result.stdout.trim().length > 0;
+}
+
 function detectBackend(): Backend {
   const override = process.env["AGENTS_SECRETS_BACKEND"];
   if (override === "keychain" || override === "pass" || override === "env") return override;
-  if (process.platform === "darwin") return "keychain";
+  if (process.platform === "darwin" && keychainAccessible()) return "keychain";
   if (existsSync("/usr/bin/pass") || existsSync("/usr/local/bin/pass")) return "pass";
   return "env";
 }

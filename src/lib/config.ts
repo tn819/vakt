@@ -38,9 +38,10 @@ export function expandPaths(value: string, paths: Record<string, string>): strin
 
 /** Expand ~ to $HOME in a path string */
 export function expandHome(value: string): string {
+  const home = process.env["HOME"] ?? process.env["USERPROFILE"] ?? "~";
   return value.startsWith("~")
-    ? join(process.env["HOME"] ?? "~", value.slice(1))
-    : value.replace(/^\$HOME/, process.env["HOME"] ?? "~");
+    ? join(home, value.slice(1))
+    : value.replace(/^\$HOME/, home).replace(/^%USERPROFILE%/, home);
 }
 
 /** Resolve provider config path for current platform */

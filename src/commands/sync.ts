@@ -1,10 +1,10 @@
 // src/commands/sync.ts
 import { join } from "path";
 import { existsSync } from "fs";
-import { execSync } from "child_process";
+import { spawnSync } from "child_process";
 import type { Command } from "commander";
 import { loadMcpConfig, loadAgentConfig, loadProviders, resolveProviderConfigPath, expandHome } from "../lib/config";
-import { resolveAll, formatForProvider, writeJsonConfig, toToml, syncSkills } from "../lib/resolver";
+import { resolveAll, formatForProvider, writeJsonConfig, readTomlConfig, toToml, syncSkills } from "../lib/resolver";
 import type { Provider } from "../lib/schemas";
 
 const bold = (s: string) => `\x1b[1m${s}\x1b[0m`;
@@ -20,48 +20,39 @@ const info = (s: string) => console.log(`  ${cyan("→")}  ${s}`);
 const err = (s: string) => console.log(`  ${red("✗")}  ${s}`);
 
 function isInstalled(cmd: string): boolean {
-  try { execSync(`command -v ${cmd}`, { stdio: "ignore" }); return true; }
-  catch { return false; }
+  const result = spawnSync(process.platform === "win32" ? "where" : "which", [cmd], { stdio: "ignore" });
+  return result.status === 0;
 }
 
 async function syncProviderMcp(
   provider: Provider,
   servers: Record<string, Record<string, unknown>>,
   dryRun: boolean,
-  allMissing: Record<string, string[]>
 ): Promise<void> {
-  // Print warnings for missing secrets
-  for (const [name, keys] of Object.entries(allMissing)) {
-    for (const k of keys)
-      warn(`secret '${k}' not found — set it with: agentctl secrets set ${k}`);
-  }
-
   if (provider.syncMethod === "cli") {
     // Claude Code: use `claude mcp add` CLI
     if (dryRun) { info(`[dry-run] Would run claude mcp add/remove`); return; }
     // Get existing claude mcp list
     let existing: string[] = [];
-    try {
-      const out = execSync("claude mcp list 2>/dev/null", { encoding: "utf-8" });
-      existing = out.split("\n").map(l => l.split(":")[0]?.trim() ?? "").filter(Boolean);
-    } catch {}
+    const listResult = spawnSync("claude", ["mcp", "list"], { encoding: "utf-8" });
+    if (listResult.status === 0) {
+      existing = (listResult.stdout ?? "").split("\n").map(l => l.split(":")[0]?.trim() ?? "").filter(Boolean);
+    }
 
     for (const [name, server] of Object.entries(servers)) {
-      // Remove first if exists
       if (existing.includes(name)) {
-        try { execSync(`claude mcp remove ${name}`, { stdio: "ignore" }); } catch {}
+        spawnSync("claude", ["mcp", "remove", name], { stdio: "ignore" });
       }
-      // Add
       const isHttp = "url" in server;
       if (isHttp) {
-        execSync(`claude mcp add --transport http ${name} ${server["url"]}`, { stdio: "ignore" });
+        spawnSync("claude", ["mcp", "add", "--transport", "http", name, server["url"] as string], { stdio: "ignore" });
       } else {
         const cmd = server["command"] as string;
-        const args = (server["args"] as string[] ?? []).join(" ");
-        const envStr = server["env"]
-          ? Object.entries(server["env"] as Record<string, string>).map(([k, v]) => `-e ${k}=${JSON.stringify(v)}`).join(" ")
-          : "";
-        execSync(`claude mcp add ${envStr} ${name} ${cmd} ${args}`.trim(), { stdio: "ignore" });
+        const args = server["args"] as string[] ?? [];
+        const envPairs = server["env"]
+          ? Object.entries(server["env"] as Record<string, string>).flatMap(([k, v]) => ["-e", `${k}=${v}`])
+          : [];
+        spawnSync("claude", ["mcp", "add", ...envPairs, name, cmd, ...args], { stdio: "ignore" });
       }
       ok(name);
     }
@@ -76,7 +67,8 @@ async function syncProviderMcp(
     if (!dryRun) ok(`wrote ${configPath}`);
     else info(`[dry-run] Would write ${configPath}`);
   } else if (provider.configFormat === "toml") {
-    const existing: Record<string, unknown> = {};
+    // Read existing TOML and merge so non-server keys are preserved
+    const existing = readTomlConfig(configPath) as Record<string, unknown>;
     existing[serversKey] = servers;
     const toml = toToml(existing);
     if (!dryRun) {
@@ -123,6 +115,17 @@ export function registerSync(program: Command): void {
 
         const { resolved, allMissing } = await resolveAll(mcpConfig, userConfig.paths);
 
+        // Print each missing-secret warning once, before iterating providers
+        const warnedSecrets = new Set<string>();
+        for (const keys of Object.values(allMissing)) {
+          for (const k of keys) {
+            if (!warnedSecrets.has(k)) {
+              warn(`secret '${k}' not found — set it with: agentctl secrets set ${k}`);
+              warnedSecrets.add(k);
+            }
+          }
+        }
+
         for (const provider of enabledProviders) {
           console.log(`\n  ${bold(provider.displayName)}`);
           if (!isInstalled(provider.detectCommand)) {
@@ -131,7 +134,7 @@ export function registerSync(program: Command): void {
           }
           const formatted = formatForProvider(resolved, provider);
           try {
-            await syncProviderMcp(provider, formatted, dryRun, allMissing);
+            await syncProviderMcp(provider, formatted, dryRun);
             if (!dryRun) ok(`synced to ${provider.displayName}`);
           } catch (e) {
             err(`sync failed for ${provider.displayName}: ${e}`);

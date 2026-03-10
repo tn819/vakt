@@ -5,8 +5,6 @@ import type { Command } from "commander";
 import { AGENTS_DIR, loadMcpConfig } from "../lib/config";
 import type { McpServer } from "../lib/schemas";
 
-const mcpPath = join(AGENTS_DIR, "mcp-config.json");
-
 export function registerAddServer(program: Command): void {
   const cmd = program
     .command("add-server <name>")
@@ -15,6 +13,7 @@ export function registerAddServer(program: Command): void {
     .allowUnknownOption(true)
     .allowExcessArguments(true)
     .action(async (name: string, opts: { http?: string }) => {
+      const mcpPath = join(AGENTS_DIR, "mcp-config.json");
       if (!existsSync(AGENTS_DIR)) {
         console.error("Run 'agentctl init' first");
         process.exit(1);

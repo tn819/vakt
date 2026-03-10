@@ -1,7 +1,8 @@
 import { join, dirname } from "path";
-import { existsSync, mkdirSync, symlinkSync, readdirSync, lstatSync } from "fs";
+import { existsSync, mkdirSync, symlinkSync, readdirSync, lstatSync, readFileSync } from "fs";
+import { parse as parseToml } from "smol-toml";
 import type { McpConfig, McpServer, Provider, StdioServer, HttpServer } from "./schemas";
-import { expandPaths, expandHome, resolveProviderConfigPath } from "./config";
+import { expandPaths, expandHome } from "./config";
 import { resolveSecretRefs } from "./secrets";
 
 export type ResolvedServer = McpServer;
@@ -127,6 +128,12 @@ export async function writeJsonConfig(
   }
 }
 
+export function readTomlConfig(filePath: string): Record<string, unknown> {
+  if (!existsSync(filePath)) return {};
+  try { return parseToml(readFileSync(filePath, "utf-8")) as Record<string, unknown>; }
+  catch { return {}; }
+}
+
 export function toToml(data: Record<string, unknown>, _indent = 0): string {
   const lines: string[] = [];
   for (const [k, v] of Object.entries(data)) {
@@ -162,7 +169,7 @@ export function syncSkills(
       try { symlinkSync(src, dest); linked.push(entry); }
       catch (e) { errors.push(`${entry}: ${e}`); }
     } else {
-      linked.push(entry);
+      linked.push(`[dry-run] Would link: ${entry}`);
     }
   }
   return { linked, skipped, errors };
