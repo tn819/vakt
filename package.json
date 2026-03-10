@@ -1,10 +1,11 @@
 {
-  "name": "agentctl",
+  "name": "mcpctl",
   "version": "0.0.0",
-  "description": "Provider-agnostic MCP server and skills manager",
+  "description": "Provider-agnostic MCP server, skills, and secrets manager",
   "scripts": {
     "test": "bats tests/",
-    "pretest": "chmod +x src/agentctl.sh"
+    "pretest": "chmod +x src/agentctl.sh",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.0.0",
@@ -17,14 +18,9 @@
     "husky": "^9.0.0",
     "semantic-release": "^24.0.0"
   },
-  "scripts": {
-    "test": "bats tests/",
-    "pretest": "chmod +x src/agentctl.sh",
-    "prepare": "husky"
-  },
   "repository": {
     "type": "git",
-    "url": "https://github.com/tn819/agentctl.git"
+    "url": "https://github.com/tn819/mcpctl.git"
   },
   "packageManager": "pnpm@10.30.3+sha512.c961d1e0a2d8e354ecaa5166b822516668b7f44cb5bd95122d590dd81922f606f5473b6d23ec4a5be05e7fcd18e8488d47d978bbe981872f1145d06e9a740017"
 }
