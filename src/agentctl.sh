@@ -342,7 +342,18 @@ config() {
   
   case "$action" in
     get)
-      python3 -c "import json; print(json.load(open('$config_file')).get('$key', ''))"
+      python3 << PYEOF
+import json
+with open('$config_file') as f:
+    obj = json.load(f)
+for k in '$key'.split('.'):
+    if not isinstance(obj, dict):
+        obj = None
+        break
+    obj = obj.get(k)
+if obj is not None:
+    print(obj)
+PYEOF
       ;;
     set)
       if [[ -z "$key" || -z "$value" ]]; then
@@ -375,8 +386,8 @@ PYEOF
 }
 
 add_server() {
-  local name="$1"
-  shift
+  local name="${1:-}"
+  shift || true
   
   if [[ -z "$name" ]]; then
     echo "Usage: agentctl add-server <name> <command> [args...]"
@@ -403,8 +414,12 @@ with open('$mcp_config', 'w') as f:
 print(f"Added HTTP server: $name")
 PYEOF
   else
-    local cmd="$1"
-    shift
+    local cmd="${1:-}"
+    if [[ -z "$cmd" ]]; then
+      echo "Usage: agentctl add-server <name> <command> [args...]"
+      return 1
+    fi
+    shift || true
     local args="$*"
     python3 << PYEOF
 import json
@@ -423,7 +438,7 @@ PYEOF
 }
 
 add_skill() {
-  local source="$1"
+  local source="${1:-}"
   local name="${2:-}"
   
   if [[ -z "$source" ]]; then
@@ -456,7 +471,7 @@ add_skill() {
   fi
   
   echo ""
-  echo "Run 'agentctl sync --skills-only' to apply to all providers."
+  echo "Run 'agentctl sync' to apply to all providers."
 }
 
 list_cmd() {
@@ -492,7 +507,7 @@ with open('$mcp_config') as f:
       for skill_path in "$skills_dir"/*/SKILL.md; do
         [[ -f "$skill_path" ]] || continue
         local skill_name=$(basename "$(dirname "$skill_path")")
-        local desc=$(grep -A1 "^description:" "$skill_path" 2>/dev/null | tail -1 | sed 's/^[ ]*//' || echo "")
+        local desc=$(grep "^description:" "$skill_path" 2>/dev/null | sed 's/^description:[[:space:]]*//' | head -1)
         echo -e "  \033[36m$skill_name\033[0m${desc:+: $desc}"
       done
     fi
@@ -536,10 +551,10 @@ secrets_cmd() {
   case "$action" in
     set)
       local key="$1"
-      local value="$2"
+      local value="${2:-}"
       if [[ -z "$value" ]]; then
         echo -n "Enter value for $key: "
-        read -rs value
+        IFS= read -r value
         echo
       fi
       secrets_set "$key" "$value"

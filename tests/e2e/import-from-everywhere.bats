@@ -10,10 +10,6 @@ setup() {
 }
 
 teardown() {
-  # Clean up any HOME-level provider configs written by tests
-  rm -f "$HOME/.claude.json.bats-backup" 2>/dev/null || true
-  [[ -f "$HOME/.claude.json.bats-orig" ]] && mv "$HOME/.claude.json.bats-orig" "$HOME/.claude.json" || rm -f "$HOME/.claude.json"
-  [[ -f "$HOME/.claude/claude.json.bats-orig" ]] && mv "$HOME/.claude/claude.json.bats-orig" "$HOME/.claude/claude.json" || rm -f "$HOME/.claude/claude.json"
   teardown_test_env
 }
 
@@ -55,7 +51,6 @@ JSON
 }
 
 @test "import-from-everywhere imports HTTP MCP servers from claude config" {
-  [[ -f "$HOME/.claude.json" ]] && cp "$HOME/.claude.json" "$HOME/.claude.json.bats-orig"
   cat > "$HOME/.claude.json" << 'JSON'
 {
   "mcpServers": {
@@ -76,7 +71,6 @@ JSON
 
 @test "import-from-everywhere imports stdio MCP servers from claude dir config" {
   mkdir -p "$HOME/.claude"
-  [[ -f "$HOME/.claude/claude.json" ]] && cp "$HOME/.claude/claude.json" "$HOME/.claude/claude.json.bats-orig"
   cat > "$HOME/.claude/claude.json" << 'JSON'
 {
   "mcpServers": {
@@ -106,7 +100,6 @@ JSON
 }
 JSON
 
-  [[ -f "$HOME/.claude.json" ]] && cp "$HOME/.claude.json" "$HOME/.claude.json.bats-orig"
   cat > "$HOME/.claude.json" << 'JSON'
 {
   "mcpServers": {

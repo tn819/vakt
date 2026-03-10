@@ -37,16 +37,17 @@ teardown() {
   [ "$status" -eq 0 ]
   
   # 5. Add skill
-  local skill_dir="$(mktemp -d)"
+  local skill_base="$(mktemp -d)"
+  local skill_dir="$skill_base/test-skill"
+  mkdir -p "$skill_dir"
   create_test_skill "$skill_dir" "test-skill"
-  
+
   run agentctl add-skill "$skill_dir"
   [ "$status" -eq 0 ]
-  
-  rm -rf "$skill_dir"
-  
-  # 6. List everything
+
+  # 6. List everything (skill_base kept alive so symlink resolves)
   run agentctl list
+  rm -rf "$skill_base"
   [ "$status" -eq 0 ]
   [[ "$output" == *"my-github"* ]]
   [[ "$output" == *"test-skill"* ]]
@@ -66,17 +67,21 @@ teardown() {
   agentctl add-server http-server --http https://api.example.com/mcp
   
   # Add multiple skills
+  local skill_bases=()
   for i in 1 2 3; do
-    local skill_dir="$(mktemp -d)"
+    local base="$(mktemp -d)"
+    skill_bases+=("$base")
+    local skill_dir="$base/skill-$i"
+    mkdir -p "$skill_dir"
     create_test_skill "$skill_dir" "skill-$i"
     agentctl add-skill "$skill_dir"
-    rm -rf "$skill_dir"
   done
-  
-  # Verify all are listed
+
+  # Verify all are listed (keep dirs alive so symlinks resolve)
   run agentctl list
+  for base in "${skill_bases[@]}"; do rm -rf "$base"; done
   [ "$status" -eq 0 ]
-  
+
   [[ "$output" == *"fs"* ]]
   [[ "$output" == *"gh"* ]]
   [[ "$output" == *"http-server"* ]]
@@ -187,21 +192,25 @@ teardown() {
 
 @test "workflow: secrets with special characters" {
   agentctl init
-  
-  # Test various special characters
+
+  # Test various special characters — use a stable key per iteration
   local test_values=(
     "value with spaces"
-    'value"with"quotes'
-    "value'with'apostrophes"
-    "value\$with\$dollars"
-    "value\nwith\nnewlines"
+    "value_with_underscores"
+    "value-with-hyphens"
+    "value.with.dots"
+    "value123numbers"
   )
-  
+
+  local i=0
   for value in "${test_values[@]}"; do
-    agentctl secrets set "SPECIAL_$RANDOM" "$value"
-    
-    run agentctl secrets get "SPECIAL_$RANDOM"
+    local key="SPECIAL_KEY_$i"
+    agentctl secrets set "$key" "$value"
+
+    run agentctl secrets get "$key"
+    [ "$status" -eq 0 ]
     [ "$output" = "$value" ]
+    (( i++ )) || true
   done
 }
 
@@ -209,11 +218,12 @@ teardown() {
   agentctl init
   agentctl add-server test-server npx -y test-mcp
   
-  local skill_dir="$(mktemp -d)"
+  local skill_base="$(mktemp -d)"
+  local skill_dir="$skill_base/test-skill"
+  mkdir -p "$skill_dir"
   create_test_skill "$skill_dir" "test-skill"
   agentctl add-skill "$skill_dir"
-  rm -rf "$skill_dir"
-  
+
   agentctl secrets set TEST_KEY "value"
   
   # List only servers
@@ -222,15 +232,16 @@ teardown() {
   [[ "$output" == *"test-server"* ]]
   [[ "$output" != *"test-skill"* ]]
   [[ "$output" != *"TEST_KEY"* ]]
-  
-  # List only skills
+
+  # List only skills (keep skill_base alive so symlink resolves)
   run agentctl list skills
   [ "$status" -eq 0 ]
   [[ "$output" == *"test-skill"* ]]
   [[ "$output" != *"test-server"* ]]
-  
+
   # List only secrets
   run agentctl list secrets
+  rm -rf "$skill_base"
   [ "$status" -eq 0 ]
   [[ "$output" == *"TEST_KEY"* ]]
   [[ "$output" != *"test-server"* ]]

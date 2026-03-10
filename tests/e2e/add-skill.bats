@@ -6,15 +6,17 @@ load '../test_helper'
 setup() {
   setup_test_env
   agentctl init
-  
-  # Create a test skill to use in tests
-  TEST_SKILL_DIR="$(mktemp -d)"
+
+  # Use a named subdir so the skill name is predictable ("test-skill")
+  TEST_SKILL_BASE="$(mktemp -d)"
+  TEST_SKILL_DIR="$TEST_SKILL_BASE/test-skill"
+  mkdir -p "$TEST_SKILL_DIR"
   create_test_skill "$TEST_SKILL_DIR" "test-skill"
 }
 
 teardown() {
+  [[ -n "${TEST_SKILL_BASE:-}" ]] && rm -rf "$TEST_SKILL_BASE"
   teardown_test_env
-  [[ -n "${TEST_SKILL_DIR:-}" ]] && rm -rf "$TEST_SKILL_DIR"
 }
 
 @test "add-skill links local skill directory" {
@@ -86,15 +88,17 @@ teardown() {
 }
 
 @test "add-skill handles skill name with hyphens" {
-  local hyphen_skill="$(mktemp -d)"
+  local base="$(mktemp -d)"
+  local hyphen_skill="$base/my-test-skill"
+  mkdir -p "$hyphen_skill"
   create_test_skill "$hyphen_skill" "my-test-skill"
-  
+
   run agentctl add-skill "$hyphen_skill"
-  
+
   [ "$status" -eq 0 ]
   [[ "$output" == *"Linked skill: my-test-skill"* ]]
-  
-  rm -rf "$hyphen_skill"
+
+  rm -rf "$base"
 }
 
 @test "add-skill git clone from URL" {

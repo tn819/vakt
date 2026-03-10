@@ -22,6 +22,11 @@ detect_backend() {
 
 # Get the current backend (from config or auto-detect)
 get_backend() {
+  # Allow override via environment variable (used in tests)
+  if [[ -n "${AGENTS_SECRETS_BACKEND:-}" ]]; then
+    echo "$AGENTS_SECRETS_BACKEND"
+    return 0
+  fi
   local config_file="${AGENTS_DIR:-$HOME/.agents}/config.json"
   if [[ -f "$config_file" ]]; then
     local backend=$(python3 -c "import json; print(json.load(open('$config_file')).get('secretsBackend', 'auto'))" 2>/dev/null || echo "auto")
@@ -50,11 +55,14 @@ secrets_set() {
       ;;
     env)
       # Store in ~/.agents/secrets.env (not recommended for production)
+      # Values are base64-encoded to support multiline and special characters
       local secrets_file="${AGENTS_DIR:-$HOME/.agents}/secrets.env"
       mkdir -p "$(dirname "$secrets_file")"
+      local encoded
+      encoded=$(printf '%s' "$value" | python3 -c "import base64,sys; print(base64.b64encode(sys.stdin.buffer.read()).decode())")
       # Remove existing key if present
       grep -v "^${key}=" "$secrets_file" 2>/dev/null > "${secrets_file}.tmp" || true
-      echo "${key}=${value}" >> "${secrets_file}.tmp"
+      echo "${key}=${encoded}" >> "${secrets_file}.tmp"
       mv "${secrets_file}.tmp" "$secrets_file"
       chmod 600 "$secrets_file"
       ;;
@@ -74,21 +82,28 @@ secrets_get() {
   
   case "$backend" in
     keychain)
-      security find-generic-password -s "$service" -a "$key" -w 2>/dev/null || echo ""
+      local value
+      value=$(security find-generic-password -s "$service" -a "$key" -w 2>/dev/null) || true
+      [[ -z "$value" ]] && return 1
+      echo "$value"
       ;;
     pass)
-      pass show "${service}/${key}" 2>/dev/null || echo ""
+      local value
+      value=$(pass show "${service}/${key}" 2>/dev/null) || true
+      [[ -z "$value" ]] && return 1
+      echo "$value"
       ;;
     env)
       local secrets_file="${AGENTS_DIR:-$HOME/.agents}/secrets.env"
+      local encoded=""
       if [[ -f "$secrets_file" ]]; then
-        grep "^${key}=" "$secrets_file" 2>/dev/null | cut -d'=' -f2- || echo ""
-      else
-        echo ""
+        encoded=$(grep "^${key}=" "$secrets_file" 2>/dev/null | cut -d'=' -f2-) || true
       fi
+      [[ -z "$encoded" ]] && return 1
+      python3 -c "import base64,sys; sys.stdout.buffer.write(base64.b64decode(sys.argv[1]))" "$encoded"
       ;;
     *)
-      echo "" ;;
+      return 1 ;;
   esac
 }
 

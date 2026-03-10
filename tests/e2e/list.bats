@@ -43,29 +43,31 @@ teardown() {
 }
 
 @test "list shows installed skills" {
-  local skill_dir="$(mktemp -d)"
+  local base="$(mktemp -d)"
+  local skill_dir="$base/test-skill"
+  mkdir -p "$skill_dir"
   create_test_skill "$skill_dir" "test-skill"
   agentctl add-skill "$skill_dir"
-  
+
   run agentctl list
-  
+
+  rm -rf "$base"
   [ "$status" -eq 0 ]
   [[ "$output" == *"test-skill"* ]]
-  
-  rm -rf "$skill_dir"
 }
 
 @test "list shows skill descriptions" {
-  local skill_dir="$(mktemp -d)"
+  local base="$(mktemp -d)"
+  local skill_dir="$base/test-skill"
+  mkdir -p "$skill_dir"
   create_test_skill "$skill_dir" "test-skill"
   agentctl add-skill "$skill_dir"
-  
+
   run agentctl list
-  
+
+  rm -rf "$base"
   [ "$status" -eq 0 ]
   [[ "$output" == *"A test skill"* ]]
-  
-  rm -rf "$skill_dir"
 }
 
 @test "list shows secrets backend" {
@@ -98,17 +100,18 @@ teardown() {
 }
 
 @test "list skills only" {
-  local skill_dir="$(mktemp -d)"
+  local base="$(mktemp -d)"
+  local skill_dir="$base/test-skill"
+  mkdir -p "$skill_dir"
   create_test_skill "$skill_dir" "test-skill"
   agentctl add-skill "$skill_dir"
-  
+
   run agentctl list skills
-  
+
+  rm -rf "$base"
   [ "$status" -eq 0 ]
   [[ "$output" == *"test-skill"* ]]
   [[ "$output" != *"MCP Servers"* ]]
-  
-  rm -rf "$skill_dir"
 }
 
 @test "list secrets only" {
@@ -140,15 +143,19 @@ teardown() {
 }
 
 @test "list handles multiple skills" {
+  local bases=()
   for i in 1 2 3; do
-    local skill_dir="$(mktemp -d)"
+    local base="$(mktemp -d)"
+    bases+=("$base")
+    local skill_dir="$base/skill-$i"
+    mkdir -p "$skill_dir"
     create_test_skill "$skill_dir" "skill-$i"
     agentctl add-skill "$skill_dir"
-    rm -rf "$skill_dir"
   done
-  
+
   run agentctl list
-  
+
+  for base in "${bases[@]}"; do rm -rf "$base"; done
   [ "$status" -eq 0 ]
   [[ "$output" == *"skill-1"* ]]
   [[ "$output" == *"skill-2"* ]]

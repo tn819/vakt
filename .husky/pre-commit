@@ -1,1 +1,1 @@
-bats tests/e2e/init.bats tests/e2e/import-from-everywhere.bats
+bats --recursive tests/
