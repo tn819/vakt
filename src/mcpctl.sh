@@ -1,24 +1,24 @@
 #!/usr/bin/env bash
-# Main CLI entry point for agentctl
+# Main CLI entry point for mcpctl
 
 set -euo pipefail
 
 AGENTS_DIR="${AGENTS_DIR:-$HOME/.agents}"
-AGENTS_SERVICE="${AGENTS_SERVICE:-agentctl}"
+AGENTS_SERVICE="${AGENTS_SERVICE:-mcpctl}"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 
 source "$SCRIPT_DIR/lib/secrets.sh"
 
 version() {
-  echo "agentctl 0.0.1"
+  echo "mcpctl 0.0.1"
 }
 
 usage() {
   cat << 'EOF'
-agentctl - Provider-agnostic MCP and skills manager
+mcpctl - Provider-agnostic MCP and skills manager
 
 USAGE:
-  agentctl <command> [options]
+  mcpctl <command> [options]
 
 COMMANDS:
   init                  Initialize ~/.agents/ directory
@@ -39,11 +39,11 @@ OPTIONS:
   -v, --version         Show version
 
 EXAMPLES:
-  agentctl init
-  agentctl sync
-  agentctl secrets set GITHUB_TOKEN
-  agentctl add-server my-server npx -y my-mcp
-  agentctl config set paths.code ~/Projects
+  mcpctl init
+  mcpctl sync
+  mcpctl secrets set GITHUB_TOKEN
+  mcpctl add-server my-server npx -y my-mcp
+  mcpctl config set paths.code ~/Projects
 
 EOF
 }
@@ -149,8 +149,8 @@ AGENTS
 
   echo -e "Next steps:"
   echo -e "  1. Edit \033[36m~/.agents/config.json\033[0m to set your paths"
-  echo -e "  2. Run \033[36magentctl secrets\033[0m to add your API keys"
-  echo -e "  3. Run \033[36magentctl sync\033[0m to sync to all providers"
+  echo -e "  2. Run \033[36mmcpctl secrets\033[0m to add your API keys"
+  echo -e "  3. Run \033[36mmcpctl sync\033[0m to sync to all providers"
   echo ""
 }
 
@@ -203,7 +203,7 @@ def read_toml_mcp(path):
     return servers
 
 def normalize_entry(cfg, fmt):
-    """Normalize provider-specific config to agentctl's mcp-config.json schema."""
+    """Normalize provider-specific config to mcpctl's mcp-config.json schema."""
     entry = {}
     transport = cfg.get("transport") or cfg.get("type", "stdio")
     if transport in ("http", "remote"):
@@ -336,7 +336,7 @@ config() {
   local config_file="$AGENTS_DIR/config.json"
   
   if [[ ! -f "$config_file" ]]; then
-    echo "Config not found. Run 'agentctl init' first."
+    echo "Config not found. Run 'mcpctl init' first."
     return 1
   fi
   
@@ -357,7 +357,7 @@ PYEOF
       ;;
     set)
       if [[ -z "$key" || -z "$value" ]]; then
-        echo "Usage: agentctl config set <key> <value>"
+        echo "Usage: mcpctl config set <key> <value>"
         return 1
       fi
       python3 << PYEOF
@@ -379,7 +379,7 @@ PYEOF
       cat "$config_file"
       ;;
     *)
-      echo "Usage: agentctl config [get|set|list] [key] [value]"
+      echo "Usage: mcpctl config [get|set|list] [key] [value]"
       return 1
       ;;
   esac
@@ -390,17 +390,17 @@ add_server() {
   shift || true
   
   if [[ -z "$name" ]]; then
-    echo "Usage: agentctl add-server <name> <command> [args...]"
-    echo "       agentctl add-server <name> --http <url>"
+    echo "Usage: mcpctl add-server <name> <command> [args...]"
+    echo "       mcpctl add-server <name> --http <url>"
     return 1
   fi
   
   local mcp_config="$AGENTS_DIR/mcp-config.json"
   if [[ ! -f "$mcp_config" ]]; then
-    echo "Run 'agentctl init' first."
+    echo "Run 'mcpctl init' first."
     return 1
   fi
-  
+
   if [[ "${1:-}" == "--http" ]]; then
     local url="$2"
     python3 << PYEOF
@@ -416,7 +416,7 @@ PYEOF
   else
     local cmd="${1:-}"
     if [[ -z "$cmd" ]]; then
-      echo "Usage: agentctl add-server <name> <command> [args...]"
+      echo "Usage: mcpctl add-server <name> <command> [args...]"
       return 1
     fi
     shift || true
@@ -434,7 +434,7 @@ PYEOF
   fi
   
   echo ""
-  echo "Run 'agentctl sync' to apply changes."
+  echo "Run 'mcpctl sync' to apply changes."
 }
 
 add_skill() {
@@ -442,9 +442,9 @@ add_skill() {
   local name="${2:-}"
   
   if [[ -z "$source" ]]; then
-    echo "Usage: agentctl add-skill <path> [name]"
-    echo "       agentctl add-skill ./my-skill"
-    echo "       agentctl add-skill https://github.com/user/skill-repo skill-name"
+    echo "Usage: mcpctl add-skill <path> [name]"
+    echo "       mcpctl add-skill ./my-skill"
+    echo "       mcpctl add-skill https://github.com/user/skill-repo skill-name"
     return 1
   fi
   
@@ -471,7 +471,7 @@ add_skill() {
   fi
   
   echo ""
-  echo "Run 'agentctl sync' to apply to all providers."
+  echo "Run 'mcpctl sync' to apply to all providers."
 }
 
 list_cmd() {
@@ -574,15 +574,15 @@ secrets_cmd() {
       secrets_interactive
       ;;
     *)
-      echo "Usage: agentctl secrets [set|get|delete|list] [key] [value]"
+      echo "Usage: mcpctl secrets [set|get|delete|list] [key] [value]"
       return 1
       ;;
   esac
 }
 
 upgrade() {
-  local repo_url="https://github.com/yourorg/agentctl"
-  echo "Upgrading agentctl..."
+  local repo_url="https://github.com/yourorg/mcpctl"
+  echo "Upgrading mcpctl..."
   if [[ -d "$SCRIPT_DIR/.git" ]]; then
     git -C "$SCRIPT_DIR" pull
     echo "Upgraded successfully."

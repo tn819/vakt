@@ -4,7 +4,7 @@
   "description": "Provider-agnostic MCP server, skills, and secrets manager",
   "scripts": {
     "test": "bats tests/",
-    "pretest": "chmod +x src/agentctl.sh",
+    "pretest": "chmod +x src/mcpctl.sh",
     "prepare": "husky"
   },
   "devDependencies": {

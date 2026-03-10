@@ -103,6 +103,6 @@ teardown() {
   
   [ "$status" -eq 0 ]
   [[ "$output" == *"Next steps"* ]]
-  [[ "$output" == *"agentctl secrets"* ]]
-  [[ "$output" == *"agentctl sync"* ]]
+  [[ "$output" == *"mcpctl secrets"* ]]
+  [[ "$output" == *"mcpctl sync"* ]]
 }

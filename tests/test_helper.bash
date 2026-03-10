@@ -2,7 +2,7 @@
 
 TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$TEST_DIR/.." && pwd)"
-AGENTCTL="${PROJECT_ROOT}/src/agentctl.sh"
+AGENTCTL="${PROJECT_ROOT}/src/mcpctl.sh"
 
 setup_test_env() {
   # Full HOME sandbox — no real ~/.claude, ~/.cursor, etc. can leak in
