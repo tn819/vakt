@@ -3,7 +3,7 @@ import { join } from "path";
 import { existsSync, readdirSync, readFileSync } from "fs";
 import type { Command } from "commander";
 import { AGENTS_DIR, loadMcpConfig } from "../lib/config";
-import { secretsList } from "../lib/secrets";
+import { secretsList, getBackend } from "../lib/secrets";
 
 const bold = (s: string) => `\x1b[1m${s}\x1b[0m`;
 const dim = (s: string) => `\x1b[2m${s}\x1b[0m`;
@@ -17,6 +17,8 @@ export function registerList(program: Command): void {
       const showServers = filter === "all" || filter === "servers";
       const showSkills = filter === "all" || filter === "skills";
       const showSecrets = filter === "all" || filter === "secrets";
+
+      console.log(dim(`Config: ~/.agents/`));
 
       if (showServers) {
         console.log(`\n${bold("── MCP Servers ──────────────────────────────────────")}`);
@@ -59,7 +61,8 @@ export function registerList(program: Command): void {
       }
 
       if (showSecrets) {
-        console.log(`\n${bold("── Secrets ──────────────────────────────────────────")}`);
+        const backend = getBackend();
+        console.log(`\n${bold("── Secrets ──────────────────────────────────────────")}  ${dim(`Backend: ${backend}`)}`);
         const keys = await secretsList();
         if (keys.length === 0) {
           console.log(`  ${dim("No secrets stored.")}`);

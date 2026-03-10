@@ -101,6 +101,10 @@ export function registerSync(program: Command): void {
       const skillsOnly = opts.skillsOnly ?? false;
 
       const agentsDir = (await import("../lib/config")).AGENTS_DIR;
+      if (!existsSync(agentsDir)) {
+        console.error("Run 'agentctl init' first");
+        process.exit(1);
+      }
       console.log();
       console.log(bold("agentctl sync"));
       console.log(dim(`Source: ${agentsDir}`));

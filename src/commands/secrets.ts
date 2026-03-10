@@ -34,7 +34,7 @@ export function registerSecrets(program: Command): void {
     .description("List all secret keys")
     .action(async () => {
       const keys = await secretsList();
-      if (keys.length === 0) { console.log("No secrets stored."); return; }
+      if (keys.length === 0) { return; }
       for (const k of keys) console.log(k);
     });
 }

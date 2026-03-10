@@ -7,7 +7,7 @@ import { AGENTS_DIR } from "../lib/config";
 const skillsDir = join(AGENTS_DIR, "skills");
 
 export function registerAddSkill(program: Command): void {
-  program
+  const cmd = program
     .command("add-skill <path> [name]")
     .description("Add a local skill directory or clone from git")
     .action(async (skillPath: string, name?: string) => {
@@ -27,9 +27,20 @@ export function registerAddSkill(program: Command): void {
         if (!existsSync(abs)) { console.error(`Path not found: ${abs}`); process.exit(1); }
         const skillName = name ?? basename(abs);
         const dest = join(skillsDir, skillName);
-        if (existsSync(dest)) { console.log(`Skill '${skillName}' already linked.`); return; }
+        if (existsSync(dest)) {
+          console.log(`Skill '${skillName}' already linked.`);
+          return;
+        }
         symlinkSync(abs, dest);
         console.log(`Linked skill: ${skillName} → ${abs}`);
       }
+      console.log("Run 'agentctl sync' to push to providers.");
     });
+
+  cmd.configureOutput({
+    outputError(str, write) {
+      write(str);
+      write(`\nUsage: agentctl add-skill <path> [name]\n`);
+    },
+  });
 }

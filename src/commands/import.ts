@@ -1,6 +1,6 @@
 // src/commands/import.ts
 import { join } from "path";
-import { existsSync, readdirSync, lstatSync } from "fs";
+import { existsSync, readdirSync, lstatSync, readFileSync } from "fs";
 import type { Command } from "commander";
 import { AGENTS_DIR, loadMcpConfig, loadProviders, resolveProviderConfigPath, expandHome } from "../lib/config";
 import type { McpServer } from "../lib/schemas";
@@ -34,14 +34,14 @@ function extractServersFromProviderConfig(
 ): Record<string, McpServer> {
   if (!existsSync(configPath)) return {};
   try {
-    const content = Bun.file(configPath).toString();
+    const content = readFileSync(configPath, "utf-8");
     const parsed = format === "json" ? JSON.parse(content) : parseTOML(content);
     const servers = parsed[serversKey] ?? {};
     // Normalise: detect http vs stdio
     const result: Record<string, McpServer> = {};
     for (const [name, raw] of Object.entries(servers as Record<string, unknown>)) {
       const r = raw as Record<string, unknown>;
-      if (r["url"] || r["httpUrl"] || r["serverUrl"]) {
+      if (r["url"] || r["httpUrl"] || r["serverUrl"] || r["type"] === "http") {
         result[name] = {
           transport: "http",
           url: (r["url"] ?? r["httpUrl"] ?? r["serverUrl"]) as string,
@@ -91,6 +91,30 @@ export function registerImport(program: Command): void {
         }
       }
 
+      // Also read ~/.claude.json (Claude global config)
+      const dotClaudeJson = join(process.env["HOME"] ?? "~", ".claude.json");
+      if (existsSync(dotClaudeJson)) {
+        const servers = extractServersFromProviderConfig(dotClaudeJson, "mcpServers", "json");
+        for (const [name, server] of Object.entries(servers)) {
+          if (existing[name]) continue;
+          existing[name] = server;
+          console.log(`  ✓  imported: ${name} (from ~/.claude.json)`);
+          imported++;
+        }
+      }
+
+      // Also read ~/.claude/claude.json (Claude Code per-user config)
+      const claudeDirJson = join(process.env["HOME"] ?? "~", ".claude", "claude.json");
+      if (existsSync(claudeDirJson)) {
+        const servers = extractServersFromProviderConfig(claudeDirJson, "mcpServers", "json");
+        for (const [name, server] of Object.entries(servers)) {
+          if (existing[name]) continue;
+          existing[name] = server;
+          console.log(`  ✓  imported: ${name} (from ~/.claude/claude.json)`);
+          imported++;
+        }
+      }
+
       // Also read ~/.mcp.json (Claude project-level convention)
       const dotMcp = join(process.env["HOME"] ?? "~", ".mcp.json");
       if (existsSync(dotMcp)) {
@@ -127,6 +151,10 @@ export function registerImport(program: Command): void {
       }
 
       await Bun.write(mcpPath, JSON.stringify(existing, null, 2));
-      console.log(`\nImported ${imported} server(s).`);
+      if (imported === 0) {
+        console.log("nothing new to import");
+      } else {
+        console.log(`\nImported ${imported} server(s).`);
+      }
     });
 }

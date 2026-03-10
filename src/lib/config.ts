@@ -1,5 +1,5 @@
 import { join } from "path";
-import { existsSync } from "fs";
+import { existsSync, readFileSync } from "fs";
 import {
   AgentConfigSchema, McpConfigSchema, ProvidersSchema,
   type AgentConfig, type McpConfig, type Providers, type Provider,
@@ -10,18 +10,18 @@ export const AGENTS_DIR = process.env["AGENTS_DIR"] ?? join(process.env["HOME"] 
 export function loadAgentConfig(): AgentConfig {
   const path = join(AGENTS_DIR, "config.json");
   if (!existsSync(path)) return AgentConfigSchema.parse({});
-  return AgentConfigSchema.parse(JSON.parse(Bun.file(path).toString()));
+  return AgentConfigSchema.parse(JSON.parse(readFileSync(path, "utf-8")));
 }
 
 export function loadMcpConfig(): McpConfig {
   const path = join(AGENTS_DIR, "mcp-config.json");
   if (!existsSync(path)) return {};
-  return McpConfigSchema.parse(JSON.parse(Bun.file(path).toString()));
+  return McpConfigSchema.parse(JSON.parse(readFileSync(path, "utf-8")));
 }
 
 export function loadProviders(): Providers {
   const path = join(import.meta.dir, "..", "providers.json");
-  const raw = JSON.parse(Bun.file(path).toString());
+  const raw = JSON.parse(readFileSync(path, "utf-8"));
   const filtered = Object.fromEntries(
     Object.entries(raw).filter(([k]) => !k.startsWith("$") && !k.startsWith("_"))
   );

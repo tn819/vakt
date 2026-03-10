@@ -1,5 +1,5 @@
 import { join } from "path";
-import { existsSync, chmodSync } from "fs";
+import { existsSync, chmodSync, readFileSync } from "fs";
 import { AGENTS_DIR } from "./config";
 
 type Backend = "keychain" | "pass" | "env";
@@ -86,7 +86,7 @@ async function passList(): Promise<string[]> {
 
 function readEnvFile(): Record<string, string> {
   if (!existsSync(ENV_FILE)) return {};
-  const lines = Bun.file(ENV_FILE).toString().split("\n");
+  const lines = readFileSync(ENV_FILE, "utf-8").split("\n");
   return Object.fromEntries(
     lines
       .filter((l) => l.includes("="))
