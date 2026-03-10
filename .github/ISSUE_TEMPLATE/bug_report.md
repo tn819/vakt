@@ -1,7 +1,7 @@
 ## _Template: .github/ISSUE_TEMPLATE/bug_report.md_
 
 name: Bug report
-about: Report a bug in agentctl
+about: Report a bug in mcpctl
 title: ''
 labels: bug
 assignees: ''
@@ -29,7 +29,7 @@ What actually happened.
 ## Environment
 
 - OS: [e.g. macOS 14.0, Ubuntu 22.04]
-- agentctl version: [run `agentctl --version`]
+- mcpctl version: [run `mcpctl --version`]
 - Secrets backend: [e.g. keychain, pass, env]
 - Provider: [e.g. OpenCode, Claude Code, Gemini CLI]
 

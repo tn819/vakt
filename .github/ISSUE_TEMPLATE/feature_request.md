@@ -1,6 +1,6 @@
 ---
 name: Feature request
-about: Suggest a new feature for agentctl
+about: Suggest a new feature for mcpctl
 title: ""
 labels: enhancement
 assignees: ""
@@ -17,7 +17,7 @@ A clear and concise description of what you want to happen.
 ## Example Usage
 
 ```bash
-agentctl new-command --option value
+mcpctl new-command --option value
 ```
 
 ## Alternatives Considered

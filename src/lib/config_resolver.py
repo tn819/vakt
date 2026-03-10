@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-config_resolver.py — Shared resolution + provider formatting for agentctl sync.
+config_resolver.py — Shared resolution + provider formatting for mcpctl sync.
 
 Eliminates the 3× duplicated Python blocks across sync_opencode(), sync_claude(),
 and sync_gemini() in sync.sh. All path expansion, secret resolution, and provider
@@ -18,7 +18,7 @@ CLI:
 
 Environment variables honoured (inherited from bash):
     AGENTS_DIR           Override ~/.agents (used in tests)
-    AGENTS_SERVICE       Keychain service name (default: agentctl)
+    AGENTS_SERVICE       Keychain service name (default: mcpctl)
 """
 
 import argparse
@@ -89,7 +89,7 @@ def expand_paths(value, paths):
 
 def secret_lookup(key, secrets_sh):
     """
-    Resolve a single secret key via the agentctl secrets backend.
+    Resolve a single secret key via the mcpctl secrets backend.
 
     Sources secrets.sh and calls secrets_get <key>. Inherits AGENTS_DIR
     so the correct backend is used in test environments.
@@ -106,7 +106,7 @@ def secret_lookup(key, secrets_sh):
     value = result.stdout.strip()
     if not value:
         print(
-            f"  WARN: secret '{key}' not found — set it with: agentctl secrets set {key}",
+            f"  WARN: secret '{key}' not found — set it with: mcpctl secrets set {key}",
             file=sys.stderr,
         )
     return value
@@ -394,7 +394,7 @@ def main():
 
     parser = argparse.ArgumentParser(
         prog="config_resolver.py",
-        description="agentctl shared config resolution and provider sync.",
+        description="mcpctl shared config resolution and provider sync.",
     )
     parser.add_argument(
         "--action",
@@ -456,7 +456,7 @@ def main():
                 f"WARNING: {len(missing)} unset secret(s): {', '.join(missing)}",
                 file=sys.stderr,
             )
-            print("Run: agentctl secrets set <KEY>  to set each one.", file=sys.stderr)
+            print("Run: mcpctl secrets set <KEY>  to set each one.", file=sys.stderr)
             sys.exit(1)
         print(f"All {len(refs)} secret reference(s) are set.")
         return

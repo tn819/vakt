@@ -1,6 +1,6 @@
 {
   "$schema": "https://github.com/gleanwork/mcp-config/blob/main/packages/mcp-config-schema/README.md",
-  "_comment": "Provider registry for agentctl. Schema aligned with @gleanwork/mcp-config-schema configStructure convention.",
+  "_comment": "Provider registry for mcpctl. Schema aligned with @gleanwork/mcp-config-schema configStructure convention.",
 
   "opencode": {
     "id": "opencode",

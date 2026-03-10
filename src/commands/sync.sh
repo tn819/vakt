@@ -25,7 +25,7 @@ for arg in "$@"; do
 done
 
 if [[ ! -d "$AGENTS_DIR" ]]; then
-  echo "Error: ~/.agents/ not initialized. Run 'agentctl init' first." >&2
+  echo "Error: ~/.agents/ not initialized. Run 'mcpctl init' first." >&2
   exit 1
 fi
 
@@ -37,7 +37,7 @@ info() { echo -e "  ${CYAN}→${RESET}  $*"; }
 dry()  { echo -e "  ${DIM}[dry-run]${RESET} $*"; }
 
 echo ""
-echo -e "${BOLD}agentctl sync${RESET}"
+echo -e "${BOLD}mcpctl sync${RESET}"
 echo -e "${DIM}Source: $AGENTS_DIR${RESET}"
 $DRY_RUN && echo -e "${YELLOW}DRY RUN — no changes will be made${RESET}"
 echo ""

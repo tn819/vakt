@@ -42,9 +42,9 @@ jobs:
 
       - name: Check CLI entry point is executable and responds
         run: |
-          chmod +x src/agentctl.sh
-          src/agentctl.sh --version
-          src/agentctl.sh --help
+          chmod +x src/mcpctl.sh
+          src/mcpctl.sh --version
+          src/mcpctl.sh --help
 
       - name: Check installer script
         run: |

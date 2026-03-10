@@ -40,8 +40,8 @@
       {
         "assets": [
           {
-            "path": "agentctl-*.tar.gz",
-            "label": "agentctl CLI"
+            "path": "mcpctl-*.tar.gz",
+            "label": "mcpctl CLI"
           }
         ]
       }
@@ -49,7 +49,7 @@
     [
       "@semantic-release/git",
       {
-        "assets": ["CHANGELOG.md", "package.json", "src/agentctl.sh"],
+        "assets": ["CHANGELOG.md", "package.json", "src/mcpctl.sh"],
         "message": "chore(release): ${nextRelease.version} [skip ci]"
       }
     ]
@@ -57,11 +57,11 @@
   "prepare": [
     {
       "path": "@semantic-release/exec",
-      "cmd": "tar -czf /tmp/agentctl-${nextRelease.version}.tar.gz --exclude='.git' --exclude='tests' --exclude='.github' --exclude='*.md' --exclude='.gitignore' --exclude='node_modules' --exclude='agentctl-*.tar.gz' . && mv /tmp/agentctl-${nextRelease.version}.tar.gz ."
+      "cmd": "tar -czf /tmp/mcpctl-${nextRelease.version}.tar.gz --exclude='.git' --exclude='tests' --exclude='.github' --exclude='*.md' --exclude='.gitignore' --exclude='node_modules' --exclude='mcpctl-*.tar.gz' . && mv /tmp/mcpctl-${nextRelease.version}.tar.gz ."
     },
     {
       "path": "@semantic-release/exec",
-      "cmd": "sed -i 's/agentctl [0-9.]*/agentctl ${nextRelease.version}/' src/agentctl.sh"
+      "cmd": "sed -i 's/mcpctl [0-9.]*/mcpctl ${nextRelease.version}/' src/mcpctl.sh"
     }
   ]
 }

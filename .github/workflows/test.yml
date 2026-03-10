@@ -26,24 +26,24 @@ jobs:
           export AGENTS_DIR="$HOME/.agents-test"
 
           # Test init
-          agentctl.sh init
+          mcpctl.sh init
           [ -d "$AGENTS_DIR" ]
           [ -f "$AGENTS_DIR/config.json" ]
 
           # Test config
-          agentctl.sh config list
-          agentctl.sh config set paths.code ~/Projects
+          mcpctl.sh config list
+          mcpctl.sh config set paths.code ~/Projects
 
           # Test secrets (env backend)
-          agentctl.sh secrets set TEST_KEY "test_value"
-          [ "$(agentctl.sh secrets get TEST_KEY)" = "test_value" ]
+          mcpctl.sh secrets set TEST_KEY "test_value"
+          [ "$(mcpctl.sh secrets get TEST_KEY)" = "test_value" ]
 
           # Test add-server
-          agentctl.sh add-server test npx -y test-mcp
-          agentctl.sh list servers | grep -q "test"
+          mcpctl.sh add-server test npx -y test-mcp
+          mcpctl.sh list servers | grep -q "test"
 
           # Test list
-          agentctl.sh list
+          mcpctl.sh list
 
   test-linux:
     runs-on: ubuntu-latest
@@ -64,24 +64,24 @@ jobs:
           export AGENTS_DIR="$HOME/.agents-test"
 
           # Test init
-          agentctl.sh init
+          mcpctl.sh init
           [ -d "$AGENTS_DIR" ]
           [ -f "$AGENTS_DIR/config.json" ]
 
           # Test config
-          agentctl.sh config list
-          agentctl.sh config set paths.code ~/Projects
+          mcpctl.sh config list
+          mcpctl.sh config set paths.code ~/Projects
 
           # Test secrets (env backend since no pass)
-          agentctl.sh secrets set TEST_KEY "test_value"
-          [ "$(agentctl.sh secrets get TEST_KEY)" = "test_value" ]
+          mcpctl.sh secrets set TEST_KEY "test_value"
+          [ "$(mcpctl.sh secrets get TEST_KEY)" = "test_value" ]
 
           # Test add-server
-          agentctl.sh add-server test npx -y test-mcp
-          agentctl.sh list servers | grep -q "test"
+          mcpctl.sh add-server test npx -y test-mcp
+          mcpctl.sh list servers | grep -q "test"
 
           # Test list
-          agentctl.sh list
+          mcpctl.sh list
 
   lint:
     runs-on: ubuntu-latest

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Cross-platform secrets management for agentctl
+# Cross-platform secrets management for mcpctl
 # Supports: macOS Keychain, Linux pass, environment variables
 
 set -euo pipefail
@@ -44,8 +44,8 @@ secrets_set() {
   local key="$1"
   local value="$2"
   local backend=$(get_backend)
-  local service="${AGENTS_SERVICE:-agentctl}"
-  
+  local service="${AGENTS_SERVICE:-mcpctl}"
+
   case "$backend" in
     keychain)
       security add-generic-password -s "$service" -a "$key" -w "$value" -U 2>/dev/null
@@ -78,8 +78,8 @@ secrets_set() {
 secrets_get() {
   local key="$1"
   local backend=$(get_backend)
-  local service="${AGENTS_SERVICE:-agentctl}"
-  
+  local service="${AGENTS_SERVICE:-mcpctl}"
+
   case "$backend" in
     keychain)
       local value
@@ -112,8 +112,8 @@ secrets_get() {
 secrets_delete() {
   local key="$1"
   local backend=$(get_backend)
-  local service="${AGENTS_SERVICE:-agentctl}"
-  
+  local service="${AGENTS_SERVICE:-mcpctl}"
+
   case "$backend" in
     keychain)
       security delete-generic-password -s "$service" -a "$key" 2>/dev/null || true
@@ -135,8 +135,8 @@ secrets_delete() {
 # Usage: secrets_list
 secrets_list() {
   local backend=$(get_backend)
-  local service="${AGENTS_SERVICE:-agentctl}"
-  
+  local service="${AGENTS_SERVICE:-mcpctl}"
+
   case "$backend" in
     keychain)
       security dump-keychain 2>/dev/null | grep -A2 "agrp:\"${service}\"" | grep "acct" | sed 's/.*acct:<blob>="//;s/"$//' | sort -u
@@ -189,7 +189,7 @@ secrets_interactive() {
   # Get required keys from mcp-config.json
   local mcp_config="${AGENTS_DIR:-$HOME/.agents}/mcp-config.json"
   if [[ ! -f "$mcp_config" ]]; then
-    echo "No mcp-config.json found. Run 'agentctl init' first."
+    echo "No mcp-config.json found. Run 'mcpctl init' first."
     return 1
   fi
   
@@ -239,7 +239,7 @@ print('\n'.join(keys))
   done <<< "$required_keys"
   
   echo ""
-  echo -e "\033[32mDone.\033[0m Run 'agentctl sync' to apply to all providers."
+  echo -e "\033[32mDone.\033[0m Run 'mcpctl sync' to apply to all providers."
 }
 
 # Export functions for use by other scripts

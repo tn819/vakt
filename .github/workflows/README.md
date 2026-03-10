@@ -1,6 +1,6 @@
 # GitHub Actions Workflows
 
-This directory contains GitHub Actions workflows for agentctl.
+This directory contains GitHub Actions workflows for mcpctl.
 
 ## Workflows
 
@@ -59,11 +59,11 @@ bats tests/
 ### Creating a Release
 
 ```bash
-# Update version in src/agentctl.sh
-vim src/agentctl.sh  # Update version() function
+# Update version in src/mcpctl.sh
+vim src/mcpctl.sh  # Update version() function
 
 # Commit changes
-git add src/agentctl.sh
+git add src/mcpctl.sh
 git commit -m "chore: bump version to v0.1.0"
 
 # Create and push tag

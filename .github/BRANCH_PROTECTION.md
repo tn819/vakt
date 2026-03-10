@@ -203,10 +203,10 @@ This is **industry standard** and **secure** because:
 
 ```bash
 # Check main protection
-gh api repos/tn819/agentctl/branches/main/protection
+gh api repos/tn819/mcpctl/branches/main/protection
 
 # Check develop protection
-gh api repos/tn819/agentctl/branches/develop/protection
+gh api repos/tn819/mcpctl/branches/develop/protection
 ```
 
 ### Test Protection (Should Fail)
@@ -235,7 +235,7 @@ git push origin v0.0.1
 gh run list --workflow=release.yml --limit 1
 
 # Verify main branch updated
-gh api repos/tn819/agentctl/commits/main -q '.message'
+gh api repos/tn819/mcpctl/commits/main -q '.message'
 ```
 
 ---

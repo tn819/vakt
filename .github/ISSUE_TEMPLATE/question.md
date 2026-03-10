@@ -1,6 +1,6 @@
 ---
 name: Question
-about: Ask a question about agentctl usage
+about: Ask a question about mcpctl usage
 title: ""
 labels: question
 assignees: ""
@@ -17,7 +17,7 @@ Describe what you've already tried to solve your problem.
 ## Environment
 
 - OS: [e.g. macOS 14.0, Ubuntu 22.04]
-- agentctl version: [run `agentctl --version`]
+- mcpctl version: [run `mcpctl --version`]
 
 ## Additional Context
 
