@@ -15,7 +15,7 @@ export function registerAddServer(program: Command): void {
     .action(async (name: string, opts: { http?: string }) => {
       const mcpPath = join(AGENTS_DIR, "mcp-config.json");
       if (!existsSync(AGENTS_DIR)) {
-        console.error("Run 'agentctl init' first");
+        console.error("Run 'vakt init' first");
         process.exit(1);
       }
 
@@ -50,14 +50,14 @@ export function registerAddServer(program: Command): void {
         await Bun.write(mcpPath, JSON.stringify(config, null, 2));
         console.log(`Added server: ${name}`);
       }
-      console.log("Run 'agentctl sync' to push to providers.");
+      console.log("Run 'vakt sync' to push to providers.");
     });
 
   cmd.configureOutput({
     outputError(str, write) {
       write(str);
-      write(`\nUsage: agentctl add-server <name> [command [args...]]\n`);
-      write(`       agentctl add-server <name> --http <url>\n`);
+      write(`\nUsage: vakt add-server <name> [command [args...]]\n`);
+      write(`       vakt add-server <name> --http <url>\n`);
     },
   });
 }

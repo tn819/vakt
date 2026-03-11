@@ -106,11 +106,11 @@ export function registerSync(program: Command): void {
 
       const agentsDir = (await import("../lib/config")).AGENTS_DIR;
       if (!existsSync(agentsDir)) {
-        console.error("Run 'agentctl init' first");
+        console.error("Run 'vakt init' first");
         process.exit(1);
       }
       console.log();
-      console.log(bold("agentctl sync"));
+      console.log(bold("vakt sync"));
       console.log(dim(`Source: ${agentsDir}`));
       if (dryRun) console.log(yellow("DRY RUN — no changes will be made"));
 
@@ -132,7 +132,7 @@ export function registerSync(program: Command): void {
         for (const keys of Object.values(allMissing)) {
           for (const k of keys) {
             if (!warnedSecrets.has(k)) {
-              warn(`secret '${k}' not found — set it with: agentctl secrets set ${k}`);
+              warn(`secret '${k}' not found — set it with: vakt secrets set ${k}`);
               warnedSecrets.add(k);
             }
           }

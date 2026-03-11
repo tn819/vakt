@@ -12,9 +12,9 @@ import { registerUpgrade } from "./commands/upgrade";
 
 const program = new Command();
 program
-  .name("agentctl")
-  .description("Provider-agnostic MCP and skills manager")
-  .version("0.0.1");
+  .name("vakt")
+  .description("Secure MCP runtime — policy, audit, registry, multi-provider sync")
+  .version("0.1.0");
 
 registerConfig(program);
 registerAddServer(program);

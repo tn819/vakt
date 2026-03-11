@@ -4,7 +4,7 @@ import { spawnSync } from "child_process";
 import { AGENTS_DIR } from "./config";
 
 type Backend = "keychain" | "pass" | "env";
-const SERVICE = process.env["AGENTS_SERVICE"] ?? "agentctl";
+const SERVICE = process.env["AGENTS_SERVICE"] ?? "vakt";
 const ENV_FILE = join(AGENTS_DIR, "secrets.env");
 
 async function run(cmd: string, args: string[]): Promise<{ stdout: string; ok: boolean }> {

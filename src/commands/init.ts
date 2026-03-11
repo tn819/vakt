@@ -21,7 +21,7 @@ const DEFAULT_MCP_CONFIG = {
 const AGENTS_MD = `# Agent Standards
 
 This directory contains your personal AI agent configuration.
-Files here are read by agentctl to sync MCP servers and skills
+Files here are read by vakt to sync MCP servers and skills
 across all your AI coding tools.
 
 ## Skills
@@ -103,8 +103,8 @@ export function registerInit(program: Command): void {
         console.log(`  ${green("✓")}  Initialized.`);
         console.log();
         console.log(bold("Next steps:"));
-        console.log(`  1. Add secrets:  agentctl secrets set GITHUB_TOKEN <your-token>`);
-        console.log(`  2. Sync to tools: agentctl sync`);
+        console.log(`  1. Add secrets:  vakt secrets set GITHUB_TOKEN <your-token>`);
+        console.log(`  2. Sync to tools: vakt sync`);
       }
       console.log();
     });
