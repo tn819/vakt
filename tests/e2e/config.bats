@@ -71,7 +71,8 @@ teardown() {
   agentctl config set paths.code "~/Projects"
   
   run cat "$AGENTS_DIR/config.json"
-  [[ "$output" == *"{\""* ]]
+  [[ "$output" == *'"paths"'* ]]
+  [[ "$output" == *'"code"'* ]]
   [[ "$output" == *"}"* ]]
 }
 
