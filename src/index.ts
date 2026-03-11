@@ -11,6 +11,7 @@ import { registerImport } from "./commands/import";
 import { registerUpgrade } from "./commands/upgrade";
 import { registerSearch } from "./commands/search";
 import { registerAudit } from "./commands/audit";
+import { registerDaemon } from "./commands/daemon";
 
 const program = new Command();
 program
@@ -29,5 +30,6 @@ registerImport(program);
 registerUpgrade(program);
 registerSearch(program);
 registerAudit(program);
+registerDaemon(program);
 
 program.parse();
