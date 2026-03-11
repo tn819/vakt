@@ -2,7 +2,9 @@
   "name": "@vakt/cli",
   "version": "0.1.0",
   "description": "Secure MCP runtime — unified config, policy enforcement, audit logging, registry verification",
-  "bin": { "vakt": "./src/index.ts" },
+  "bin": {
+    "vakt": "./src/index.ts"
+  },
   "scripts": {
     "dev": "bun run src/index.ts",
     "build": "bun build src/index.ts --compile --outfile dist/vakt",
@@ -30,6 +32,9 @@
   },
   "packageManager": "pnpm@10.30.3+sha512.c961d1e0a2d8e354ecaa5166b822516668b7f44cb5bd95122d590dd81922f606f5473b6d23ec4a5be05e7fcd18e8488d47d978bbe981872f1145d06e9a740017",
   "dependencies": {
+    "@opentelemetry/api": "^1.9.0",
+    "@opentelemetry/exporter-otlp-grpc": "^0.26.0",
+    "@opentelemetry/sdk-node": "^0.213.0",
     "commander": "^14.0.3",
     "smol-toml": "^1.6.0",
     "zod": "^3.25.76"

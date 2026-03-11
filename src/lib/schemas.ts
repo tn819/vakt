@@ -76,6 +76,10 @@ export const AgentConfigSchema = z.object({
   }),
   providers: z.array(z.string()).default(["claude", "cursor"]),
   secretsBackend: z.enum(["auto", "keychain", "pass", "env"]).default("auto"),
+  otel: z.object({
+    endpoint: z.string().optional(),
+    enabled:  z.boolean().default(true),
+  }).optional(),
 });
 
 // ── Provider registry ─────────────────────────────────────────────────────────
