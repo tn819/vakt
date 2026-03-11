@@ -222,3 +222,103 @@ JSON
   [ "$status" -eq 0 ]
   [[ "$output" == *"2 server(s)"* ]]
 }
+
+# ── Data-driven provider registry tests ─────────────────────────────────────
+# These tests verify that import reads from paths defined in providers.json
+# and that no paths are hard-coded in the import command.
+
+@test "import reads claude primary configPath from provider registry" {
+  # providers.json declares claude configPath as $HOME/.claude.json
+  # The import loop should pick this up without any hard-coded path
+  cat > "$HOME/.claude.json" << 'JSON'
+{
+  "mcpServers": {
+    "registry-driven-server": {
+      "command": "npx",
+      "args": ["-y", "some-mcp"]
+    }
+  }
+}
+JSON
+
+  run agentctl import-from-everywhere
+
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"registry-driven-server"* ]]
+  assert_json_key_exists "$AGENTS_DIR/mcp-config.json" "registry-driven-server"
+}
+
+@test "import reads claude additionalImportPaths from provider registry" {
+  # providers.json declares additionalImportPaths for claude as ~/.claude/claude.json
+  mkdir -p "$HOME/.claude"
+  cat > "$HOME/.claude/claude.json" << 'JSON'
+{
+  "mcpServers": {
+    "additional-path-server": {
+      "command": "uv",
+      "args": ["run", "myserver"]
+    }
+  }
+}
+JSON
+
+  run agentctl import-from-everywhere
+
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"additional-path-server"* ]]
+  assert_json_key_exists "$AGENTS_DIR/mcp-config.json" "additional-path-server"
+}
+
+@test "import handles providers with syncMethod cli same as file providers" {
+  # Claude has syncMethod=cli but configFormat=json — import must still read its file
+  cat > "$HOME/.claude.json" << 'JSON'
+{
+  "mcpServers": {
+    "cli-method-server": { "command": "node", "args": ["server.js"] }
+  }
+}
+JSON
+
+  run agentctl import-from-everywhere
+
+  [ "$status" -eq 0 ]
+  assert_json_key_exists "$AGENTS_DIR/mcp-config.json" "cli-method-server"
+}
+
+@test "import uses provider serversPropertyName from registry" {
+  # OpenCode uses "mcp" as serversPropertyName, not "mcpServers"
+  local opencode_dir="$HOME/.config/opencode"
+  mkdir -p "$opencode_dir"
+  cat > "$opencode_dir/opencode.json" << 'JSON'
+{
+  "mcp": {
+    "opencode-server": {
+      "type": "local",
+      "command": ["npx", "-y", "opencode-mcp"]
+    }
+  }
+}
+JSON
+
+  run agentctl import-from-everywhere
+
+  [ "$status" -eq 0 ]
+  assert_json_key_exists "$AGENTS_DIR/mcp-config.json" "opencode-server"
+}
+
+@test "import primary and additional paths both contribute to total count" {
+  cat > "$HOME/.claude.json" << 'JSON'
+{"mcpServers": {"primary-server": {"command": "npx", "args": []}}}
+JSON
+  mkdir -p "$HOME/.claude"
+  cat > "$HOME/.claude/claude.json" << 'JSON'
+{"mcpServers": {"additional-server": {"command": "npx", "args": []}}}
+JSON
+
+  run agentctl import-from-everywhere
+
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"2 server(s)"* ]]
+  assert_json_key_exists "$AGENTS_DIR/mcp-config.json" "primary-server"
+  assert_json_key_exists "$AGENTS_DIR/mcp-config.json" "additional-server"
+}

@@ -160,3 +160,67 @@ PYEOF
   [ "$status" -eq 0 ]
   # Would verify existing config is preserved/merged
 }
+
+# ── syncMethod and configFormat separation tests ─────────────────────────────
+
+@test "sync JSON provider writes config file (not CLI commands)" {
+  # Cursor uses configFormat=json + syncMethod=file
+  # Stub the cursor binary so isInstalled() returns true
+  local bin_dir="$HOME/bin"
+  mkdir -p "$bin_dir"
+  printf '#!/bin/sh\n' > "$bin_dir/cursor"
+  chmod +x "$bin_dir/cursor"
+  export PATH="$bin_dir:$PATH"
+
+  agentctl add-server test-server npx -y test-mcp
+
+  run agentctl sync --dry-run
+
+  [ "$status" -eq 0 ]
+  # File-sync path emits "Would write <path>" for the cursor provider
+  [[ "$output" == *"Would write"* ]]
+  # Cursor section specifically should show "Would write", not CLI invocation
+  [[ "$output" == *"Cursor"* ]] || [[ "$output" == *"cursor"* ]]
+}
+
+@test "sync CLI provider (claude) skips file write and uses CLI pathway" {
+  # Claude has syncMethod=cli
+  # Stub the claude binary so isInstalled() returns true
+  local bin_dir="$HOME/bin"
+  mkdir -p "$bin_dir"
+  printf '#!/bin/sh\n' > "$bin_dir/claude"
+  chmod +x "$bin_dir/claude"
+  export PATH="$bin_dir:$PATH"
+
+  agentctl add-server test-server npx -y test-mcp
+
+  run agentctl sync --dry-run
+
+  [ "$status" -eq 0 ]
+  # CLI-sync dry-run path emits "Would run claude mcp add/remove"
+  [[ "$output" == *"Would run claude mcp add/remove"* ]]
+  # Must NOT emit "Would write <file path>" for a CLI-sync provider
+  [[ "$output" != *"Would write $HOME/.claude"* ]]
+}
+
+@test "sync provider configFormat json writes config file to registry path" {
+  # Cursor uses configFormat=json — after a real sync, the config file should exist
+  local bin_dir="$HOME/bin"
+  mkdir -p "$bin_dir"
+  printf '#!/bin/sh\n' > "$bin_dir/cursor"
+  chmod +x "$bin_dir/cursor"
+  export PATH="$bin_dir:$PATH"
+
+  local cursor_config="$HOME/.cursor/mcp.json"
+  mkdir -p "$(dirname "$cursor_config")"
+
+  agentctl add-server test-server npx -y test-mcp
+
+  run agentctl sync
+
+  [ "$status" -eq 0 ]
+  # The config file at the registry path must now exist
+  [ -f "$cursor_config" ]
+  # And it must contain our server
+  grep -q "test-server" "$cursor_config"
+}

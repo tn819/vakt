@@ -13,7 +13,7 @@ setup_test_env() {
 
 teardown_test_env() {
   if [[ -n "${SANDBOX_HOME:-}" && -d "$SANDBOX_HOME" ]]; then
-    rm -rf "$SANDBOX_HOME"
+    rm -rf "$SANDBOX_HOME" 2>/dev/null || true
   fi
 }
 
