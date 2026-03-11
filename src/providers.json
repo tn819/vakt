@@ -48,7 +48,13 @@
     "documentationUrl": "https://code.claude.com/docs/en/mcp",
     "transports": ["stdio", "http"],
     "supportedPlatforms": ["darwin", "linux", "win32"],
-    "configFormat": "cli",
+    "configFormat": "json",
+    "syncMethod": "cli",
+    "additionalImportPaths": {
+      "darwin": ["$HOME/.claude/claude.json"],
+      "linux": ["$HOME/.claude/claude.json"],
+      "win32": ["%USERPROFILE%\\.claude\\claude.json"]
+    },
     "configPath": {
       "darwin": "$HOME/.claude.json",
       "linux": "$HOME/.claude.json",

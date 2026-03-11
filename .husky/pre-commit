@@ -1,1 +1,7 @@
+BUN_BIN="${HOME}/.bun/bin"
+if [ ! -d "$BUN_BIN" ]; then
+  # Fallback: find bun installation on macOS multi-user systems
+  BUN_BIN=$(ls -d /Users/*/.bun/bin 2>/dev/null | head -1)
+fi
+export PATH="/usr/bin:/bin:/usr/local/bin:${BUN_BIN}:/opt/homebrew/bin:${PATH}"
 bats --recursive tests/

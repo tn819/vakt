@@ -1,3 +1,9 @@
+# Git worktrees
+.worktrees/
+
+# Local planning docs (write freely, not committed)
+docs/plans/
+
 # Dependencies
 node_modules/
 package-lock.json
