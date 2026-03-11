@@ -5,6 +5,7 @@ import { spawnSync } from "child_process";
 import type { Command } from "commander";
 import { loadMcpConfig, loadAgentConfig, loadProviders, resolveProviderConfigPath, expandHome } from "../lib/config";
 import { loadPolicy } from "../lib/policy";
+import { AuditStore } from "../lib/audit";
 import { resolveAll, formatForProvider, writeJsonConfig, readTomlConfig, toToml, syncSkills } from "../lib/resolver";
 import type { Provider } from "../lib/schemas";
 
@@ -189,6 +190,17 @@ export function registerSync(program: Command): void {
           for (const e of errors) err(e);
         }
       }
+
+      // Record sync event in audit log
+      try {
+        const auditStore = new AuditStore();
+        auditStore.init();
+        auditStore.recordSync({
+          providers: enabledProviders.map((p: Provider) => p.id),
+          servers: Object.keys(mcpConfig),
+          dryRun,
+        });
+      } catch { /* audit failures are non-fatal */ }
 
       console.log();
       console.log(bold("── Summary ─────────────────────────────────────────────────"));

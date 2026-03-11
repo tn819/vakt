@@ -10,6 +10,7 @@ import { registerList } from "./commands/list";
 import { registerImport } from "./commands/import";
 import { registerUpgrade } from "./commands/upgrade";
 import { registerSearch } from "./commands/search";
+import { registerAudit } from "./commands/audit";
 
 const program = new Command();
 program
@@ -27,5 +28,6 @@ registerList(program);
 registerImport(program);
 registerUpgrade(program);
 registerSearch(program);
+registerAudit(program);
 
 program.parse();
