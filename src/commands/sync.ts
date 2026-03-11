@@ -19,9 +19,18 @@ const warn = (s: string) => console.log(`  ${yellow("⚠")}  ${s}`);
 const info = (s: string) => console.log(`  ${cyan("→")}  ${s}`);
 const err = (s: string) => console.log(`  ${red("✗")}  ${s}`);
 
+function resolveCmd(cmd: string): string | null {
+  // Use absolute paths for system lookup tools to avoid PATH-based resolution
+  const lookup = process.platform === "win32"
+    ? "C:\\Windows\\System32\\where.exe"
+    : "/usr/bin/which";
+  const result = spawnSync(lookup, [cmd], { encoding: "utf-8" });
+  if (result.status !== 0) return null;
+  return result.stdout.trim().split("\n")[0]?.trim() ?? null;
+}
+
 function isInstalled(cmd: string): boolean {
-  const result = spawnSync(process.platform === "win32" ? "where" : "which", [cmd], { stdio: "ignore" });
-  return result.status === 0;
+  return resolveCmd(cmd) !== null;
 }
 
 async function syncProviderMcp(
@@ -32,27 +41,30 @@ async function syncProviderMcp(
   if (provider.syncMethod === "cli") {
     // Claude Code: use `claude mcp add` CLI
     if (dryRun) { info(`[dry-run] Would run claude mcp add/remove`); return; }
-    // Get existing claude mcp list
+    // Resolve absolute path to avoid PATH-based command injection
+    const claudeBin = resolveCmd("claude");
+    if (!claudeBin) { warn("claude not found, skipping CLI sync"); return; }
+
     let existing: string[] = [];
-    const listResult = spawnSync("claude", ["mcp", "list"], { encoding: "utf-8" });
+    const listResult = spawnSync(claudeBin, ["mcp", "list"], { encoding: "utf-8" });
     if (listResult.status === 0) {
       existing = (listResult.stdout ?? "").split("\n").map(l => l.split(":")[0]?.trim() ?? "").filter(Boolean);
     }
 
     for (const [name, server] of Object.entries(servers)) {
       if (existing.includes(name)) {
-        spawnSync("claude", ["mcp", "remove", name], { stdio: "ignore" });
+        spawnSync(claudeBin, ["mcp", "remove", name], { stdio: "ignore" });
       }
       const isHttp = "url" in server;
       if (isHttp) {
-        spawnSync("claude", ["mcp", "add", "--transport", "http", name, server["url"] as string], { stdio: "ignore" });
+        spawnSync(claudeBin, ["mcp", "add", "--transport", "http", name, server["url"] as string], { stdio: "ignore" });
       } else {
         const cmd = server["command"] as string;
         const args = server["args"] as string[] ?? [];
         const envPairs = server["env"]
           ? Object.entries(server["env"] as Record<string, string>).flatMap(([k, v]) => ["-e", `${k}=${v}`])
           : [];
-        spawnSync("claude", ["mcp", "add", ...envPairs, name, cmd, ...args], { stdio: "ignore" });
+        spawnSync(claudeBin, ["mcp", "add", ...envPairs, name, cmd, ...args], { stdio: "ignore" });
       }
       ok(name);
     }

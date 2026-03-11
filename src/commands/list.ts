@@ -51,7 +51,7 @@ export function registerList(program: Command): void {
               let desc = "";
               if (existsSync(skillMd)) {
                 const content = readFileSync(skillMd, "utf-8");
-                const m = content.match(/^description:\s*(.+)$/m);
+                const m = content.match(/^description:\s*([^\r\n]+)/m);
                 if (m) desc = dim(m[1]!);
               }
               console.log(`  ${bold(skill)}  ${desc}`);
