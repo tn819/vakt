@@ -41,54 +41,49 @@ vakt/
 │   ├── providers.json            # Provider registry (data-driven, validated by ProvidersSchema)
 │   ├── agentctl.sh               # Thin shim: exec bun run src/index.ts "$@"
 │   ├── commands/                 # One file per top-level command
-│   │   ├── init.ts
-│   │   ├── sync.ts
 │   │   ├── add-server.ts
 │   │   ├── add-skill.ts
-│   │   ├── secrets.ts
-│   │   ├── config.ts
-│   │   ├── list.ts
-│   │   ├── import.ts
 │   │   ├── audit.ts
-│   │   ├── search.ts
-│   │   ├── proxy.ts
+│   │   ├── config.ts
 │   │   ├── daemon.ts
-│   │   ├── runtime.ts
-│   │   ├── upgrade.ts
-│   │   ├── pull.ts
+│   │   ├── import.ts
+│   │   ├── init.ts
+│   │   ├── list.ts
 │   │   ├── lockdown.ts
-│   │   ├── watch.ts
-│   │   └── registry.ts
+│   │   ├── proxy.ts
+│   │   ├── pull.ts
+│   │   ├── registry.ts
+│   │   ├── runtime.ts
+│   │   ├── search.ts
+│   │   ├── secrets.ts
+│   │   ├── sync.ts
+│   │   ├── upgrade.ts
+│   │   └── watch.ts
 │   ├── daemon/                   # Background process manager + IPC server
 │   │   ├── index.ts
 │   │   ├── ipc.ts
 │   │   ├── process-manager.ts
 │   │   └── proxy.ts
 │   └── lib/                      # Shared libraries — pure functions, no CLI side effects
-│       ├── schemas.ts            # ALL Zod schemas and inferred types — single source of truth
-│       ├── config.ts             # loadAgentConfig, loadMcpConfig, loadProviders, path utils
-│       ├── resolver.ts           # Secret injection, path expansion, provider formatting, TOML
-│       ├── secrets.ts            # Secrets backends: keychain / pass / env
-│       ├── policy.ts             # PolicyEngine: glob-based allow/deny/ask
-│       ├── audit.ts              # SQLite audit store (OCSF class_uid 4001)
-│       ├── otel.ts               # OpenTelemetry pipeline, per-tool spans
-│       ├── registry.ts           # MCP registry client (registry.modelcontextprotocol.io)
-│       ├── runtime.ts            # E2B cloud runtime adapter
-│       ├── remote.ts             # Remote config fetch (GitHub/GitLab/HTTPS/local)
-│       └── verify.ts             # Supply chain verification (cosign OCI + npm SLSA)
+│       ├── audit.ts
+│       ├── config.ts
+│       ├── otel.ts
+│       ├── policy.ts
+│       ├── registry.ts
+│       ├── remote.ts
+│       ├── resolver.ts
+│       ├── runtime.ts
+│       ├── schemas.ts
+│       ├── secrets.ts
+│       └── verify.ts
 ├── tests/
 │   ├── unit/                     # Bun unit tests (*.test.ts)
 │   │   ├── setup.ts              # Bun test preload — configured in bunfig.toml
-│   │   ├── config.test.ts
-│   │   ├── policy.test.ts
-│   │   ├── audit.test.ts
-│   │   ├── secrets.test.ts
-│   │   ├── registry.test.ts
-│   │   ├── proxy.test.ts
-│   │   └── process-manager.test.ts
+│   │   └── *.test.ts
 │   └── e2e/                      # bats end-to-end tests (invoke vakt CLI via agentctl.sh)
 │       └── *.bats
 ├── skills/                       # Bundled skills (bash scripts + SKILL.md)
+├── scripts/                      # Dev scripts (refresh-agents-md.sh, etc.)
 ├── docs/                         # TODO: GitHub Pages static site
 └── install.sh
 ```
