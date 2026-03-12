@@ -80,6 +80,14 @@ export const AgentConfigSchema = z.object({
     endpoint: z.string().optional(),
     enabled:  z.boolean().default(true),
   }).optional(),
+  runtime: z.object({
+    default: z.enum(["local", "e2b"]).default("local"),
+    servers: z.record(z.string(), z.enum(["local", "e2b"])).optional(),
+    e2b: z.object({
+      api_key:  z.string(),
+      template: z.string().optional(),
+    }).optional(),
+  }).optional(),
 });
 
 // ── Provider registry ─────────────────────────────────────────────────────────
