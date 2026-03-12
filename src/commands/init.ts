@@ -1,6 +1,6 @@
 // src/commands/init.ts
-import { join } from "path";
-import { existsSync, mkdirSync, readSync } from "fs";
+import { join } from "node:path";
+import { existsSync, mkdirSync, readSync } from "node:fs";
 import type { Command } from "commander";
 import { AGENTS_DIR } from "../lib/config";
 

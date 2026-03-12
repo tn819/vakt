@@ -32,8 +32,8 @@ export function registerAudit(program: Command): void {
         return;
       }
 
-      const W = { t: 12, srv: 16, tool: 30, pol: 8 };
-      console.log(`\n${"TIME".padEnd(W.t)} ${"SERVER".padEnd(W.srv)} ${"TOOL".padEnd(W.tool)} ${"POLICY".padEnd(W.pol)} DUR`);
+      const COL_WIDTH = { time: 12, server: 16, tool: 30, policy: 8 };
+      console.log(`\n${"TIME".padEnd(COL_WIDTH.time)} ${"SERVER".padEnd(COL_WIDTH.server)} ${"TOOL".padEnd(COL_WIDTH.tool)} ${"POLICY".padEnd(COL_WIDTH.policy)} DUR`);
       console.log("─".repeat(76));
 
       for (const r of rows) {
@@ -43,8 +43,8 @@ export function registerAudit(program: Command): void {
           ? `${r.duration_ms}ms`
           : `${((r.duration_ms as number) / 1000).toFixed(1)}s`;
         console.log(
-          `${time.padEnd(W.t)} ${(r.server_name as string).padEnd(W.srv)} ` +
-          `${(r.tool_name as string).padEnd(W.tool)} ${policy.padEnd(W.pol)} ${dur}`
+          `${time.padEnd(COL_WIDTH.time)} ${(r.server_name as string).padEnd(COL_WIDTH.server)} ` +
+          `${(r.tool_name as string).padEnd(COL_WIDTH.tool)} ${policy.padEnd(COL_WIDTH.policy)} ${dur}`
         );
       }
     });

@@ -1,6 +1,6 @@
 // src/commands/config.ts
-import { join } from "path";
-import { existsSync, readFileSync } from "fs";
+import { join } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
 import type { Command } from "commander";
 import { AGENTS_DIR, loadAgentConfig } from "../lib/config";
 
@@ -26,7 +26,7 @@ function setNestedKey(obj: Record<string, unknown>, dotKey: string, value: unkno
     if (!cur[k] || typeof cur[k] !== "object") cur[k] = {};
     cur = cur[k] as Record<string, unknown>;
   }
-  cur[parts[parts.length - 1]!] = value;
+  cur[parts.at(-1)!] = value;
 }
 
 function listAction(): void {

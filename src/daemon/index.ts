@@ -1,4 +1,4 @@
-import { writeFileSync, unlinkSync, existsSync } from "fs";
+import { writeFileSync, unlinkSync, existsSync } from "node:fs";
 import { loadMcpConfig, loadAgentConfig } from "../lib/config";
 import { AuditStore } from "../lib/audit";
 import { ProcessManager } from "./process-manager";

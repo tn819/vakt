@@ -1,6 +1,6 @@
 // src/commands/secrets.ts
 import type { Command } from "commander";
-import { secretsSet, secretsGet, secretsDelete, secretsList, getBackend } from "../lib/secrets";
+import { secretsSet, secretsGet, secretsDelete, secretsList } from "../lib/secrets";
 
 export function registerSecrets(program: Command): void {
   const cmd = program

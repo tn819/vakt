@@ -1,6 +1,6 @@
 // src/commands/add-skill.ts
-import { join, basename, resolve } from "path";
-import { existsSync, symlinkSync, mkdirSync } from "fs";
+import { join, basename, resolve } from "node:path";
+import { existsSync, symlinkSync, mkdirSync } from "node:fs";
 import type { Command } from "commander";
 import { AGENTS_DIR } from "../lib/config";
 

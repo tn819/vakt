@@ -1,6 +1,6 @@
 // src/commands/upgrade.ts
-import { dirname } from "path";
-import { existsSync } from "fs";
+import { dirname } from "node:path";
+import { existsSync } from "node:fs";
 import type { Command } from "commander";
 
 export function registerUpgrade(program: Command): void {

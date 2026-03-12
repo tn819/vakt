@@ -1,8 +1,8 @@
-import { join, dirname } from "path";
-import { existsSync, mkdirSync, symlinkSync, readdirSync, lstatSync, readFileSync } from "fs";
+import { join, dirname } from "node:path";
+import { existsSync, mkdirSync, symlinkSync, readdirSync, lstatSync, readFileSync } from "node:fs";
 import { parse as parseToml } from "smol-toml";
 import type { McpConfig, McpServer, Provider, StdioServer, HttpServer } from "./schemas";
-import { expandPaths, expandHome } from "./config";
+import { expandPaths } from "./config";
 import { resolveSecretRefs } from "./secrets";
 
 export type ResolvedServer = McpServer;
@@ -163,7 +163,6 @@ export function syncSkills(
   for (const entry of readdirSync(skillsSource)) {
     const dest = join(skillsTarget, entry);
     const src = join(skillsSource, entry);
-    if (existsSync(dest) && lstatSync(dest).isSymbolicLink()) { skipped.push(entry); continue; }
     if (existsSync(dest)) { skipped.push(entry); continue; }
     if (!dryRun) {
       try { symlinkSync(src, dest); linked.push(entry); }

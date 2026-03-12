@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+import { randomUUID } from "node:crypto";
 import { PolicyEngine } from "../lib/policy";
 import { AuditStore } from "../lib/audit";
 import { recordToolCallSpan } from "../lib/otel";
