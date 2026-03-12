@@ -4,5 +4,20 @@ if [ ! -d "$BUN_BIN" ]; then
 fi
 export PATH="/usr/bin:/bin:/usr/local/bin:${BUN_BIN}:/opt/homebrew/bin:${PATH}"
 
+# If src/ changed, show AGENTS.md diff and ask for confirmation
+if git diff --name-only HEAD @{u} 2>/dev/null | grep -q '^src/'; then
+  echo ""
+  echo "⚠  src/ changes detected. Review AGENTS.md before pushing:"
+  echo ""
+  git diff HEAD @{u} -- AGENTS.md
+  echo ""
+  printf "AGENTS.md looks up to date? [y/N] "
+  read -r answer </dev/tty
+  if [ "$answer" != "y" ] && [ "$answer" != "Y" ]; then
+    echo "Push aborted. Update AGENTS.md and re-push."
+    exit 1
+  fi
+fi
+
 # Full e2e suite (~2min) — runs on push, not every commit
 bats --recursive tests/
