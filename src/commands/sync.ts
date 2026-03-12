@@ -101,10 +101,12 @@ export function registerSync(program: Command): void {
     .option("--dry-run", "Preview changes without applying")
     .option("--mcp-only", "Sync MCP servers only")
     .option("--skills-only", "Sync skills only")
-    .action(async (opts: { dryRun?: boolean; mcpOnly?: boolean; skillsOnly?: boolean }) => {
+    .option("--with-proxy", "Route provider configs through vakt proxy for runtime policy + audit (opt-in)")
+    .action(async (opts: { dryRun?: boolean; mcpOnly?: boolean; skillsOnly?: boolean; withProxy?: boolean }) => {
       const dryRun = opts.dryRun ?? false;
       const mcpOnly = opts.mcpOnly ?? false;
       const skillsOnly = opts.skillsOnly ?? false;
+      const withProxy = opts.withProxy ?? false;
 
       const agentsDir = (await import("../lib/config")).AGENTS_DIR;
       if (!existsSync(agentsDir)) {
@@ -158,7 +160,20 @@ export function registerSync(program: Command): void {
             warn(`${provider.detectCommand} not found, skipping`);
             continue;
           }
-          const formatted = formatForProvider(resolved, provider);
+
+          // --with-proxy: replace each stdio server's command with `vakt proxy <name>`
+          const serversForProvider = withProxy
+            ? Object.fromEntries(
+                Object.entries(resolved).map(([name, server]) => {
+                  if (!("url" in server)) {
+                    return [name, { command: "vakt", args: ["proxy", name], env: (server as any).env }];
+                  }
+                  return [name, server];
+                })
+              )
+            : resolved;
+
+          const formatted = formatForProvider(serversForProvider as typeof resolved, provider);
           try {
             await syncProviderMcp(provider, formatted, dryRun);
             if (!dryRun) ok(`synced to ${provider.displayName}`);
