@@ -9,12 +9,14 @@ import { registerSync } from "./commands/sync";
 import { registerList } from "./commands/list";
 import { registerImport } from "./commands/import";
 import { registerUpgrade } from "./commands/upgrade";
+import { registerSearch } from "./commands/search";
+import { registerAudit } from "./commands/audit";
 
 const program = new Command();
 program
-  .name("agentctl")
-  .description("Provider-agnostic MCP and skills manager")
-  .version("0.0.1");
+  .name("vakt")
+  .description("Secure MCP runtime — policy, audit, registry, multi-provider sync")
+  .version("0.1.0");
 
 registerConfig(program);
 registerAddServer(program);
@@ -25,5 +27,7 @@ registerSync(program);
 registerList(program);
 registerImport(program);
 registerUpgrade(program);
+registerSearch(program);
+registerAudit(program);
 
 program.parse();

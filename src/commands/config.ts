@@ -8,7 +8,7 @@ const configPath = join(AGENTS_DIR, "config.json");
 
 function guardInit(): void {
   if (!existsSync(configPath)) {
-    console.error("Run 'agentctl init' first");
+    console.error("Run 'vakt init' first");
     process.exit(1);
   }
 }
@@ -69,7 +69,7 @@ export function registerConfig(program: Command): void {
   setCmd.configureOutput({
     outputError(str, write) {
       write(str);
-      write(`\nUsage: agentctl config set <key> <value>\n`);
+      write(`\nUsage: vakt config set <key> <value>\n`);
     },
   });
 }

@@ -4,6 +4,8 @@ import { existsSync } from "fs";
 import { spawnSync } from "child_process";
 import type { Command } from "commander";
 import { loadMcpConfig, loadAgentConfig, loadProviders, resolveProviderConfigPath, expandHome } from "../lib/config";
+import { loadPolicy } from "../lib/policy";
+import { AuditStore } from "../lib/audit";
 import { resolveAll, formatForProvider, writeJsonConfig, readTomlConfig, toToml, syncSkills } from "../lib/resolver";
 import type { Provider } from "../lib/schemas";
 
@@ -106,15 +108,27 @@ export function registerSync(program: Command): void {
 
       const agentsDir = (await import("../lib/config")).AGENTS_DIR;
       if (!existsSync(agentsDir)) {
-        console.error("Run 'agentctl init' first");
+        console.error("Run 'vakt init' first");
         process.exit(1);
       }
       console.log();
-      console.log(bold("agentctl sync"));
+      console.log(bold("vakt sync"));
       console.log(dim(`Source: ${agentsDir}`));
       if (dryRun) console.log(yellow("DRY RUN — no changes will be made"));
 
       const mcpConfig = loadMcpConfig();
+      const policy = loadPolicy();
+      if (policy?.registryPolicy === "registry-only") {
+        const unverified = Object.keys(mcpConfig).filter(
+          name => !(mcpConfig[name] as any)["registry"]
+        );
+        if (unverified.length > 0) {
+          err(`Sync blocked — policy is registry-only but these servers have no registry field: ${unverified.join(", ")}`);
+          err(`Set policy.registryPolicy to "warn-unverified" or add a registry field to each server.`);
+          process.exit(1);
+        }
+      }
+
       const userConfig = loadAgentConfig();
       const allProviders = loadProviders();
 
@@ -132,7 +146,7 @@ export function registerSync(program: Command): void {
         for (const keys of Object.values(allMissing)) {
           for (const k of keys) {
             if (!warnedSecrets.has(k)) {
-              warn(`secret '${k}' not found — set it with: agentctl secrets set ${k}`);
+              warn(`secret '${k}' not found — set it with: vakt secrets set ${k}`);
               warnedSecrets.add(k);
             }
           }
@@ -176,6 +190,17 @@ export function registerSync(program: Command): void {
           for (const e of errors) err(e);
         }
       }
+
+      // Record sync event in audit log
+      try {
+        const auditStore = new AuditStore();
+        auditStore.init();
+        auditStore.recordSync({
+          providers: enabledProviders.map((p: Provider) => p.id),
+          servers: Object.keys(mcpConfig),
+          dryRun,
+        });
+      } catch { /* audit failures are non-fatal */ }
 
       console.log();
       console.log(bold("── Summary ─────────────────────────────────────────────────"));

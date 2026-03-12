@@ -16,7 +16,7 @@ export function registerUpgrade(program: Command): void {
         await proc.exited;
         console.log("Done.");
       } else {
-        console.log("Manual upgrade required. Visit: https://github.com/tn819/agentctl");
+        console.log("Manual upgrade required. Visit: https://github.com/tn819/vakt");
       }
     });
 }
