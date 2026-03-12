@@ -18,7 +18,7 @@ export async function initOtel(endpoint?: string): Promise<void> {
 
     const sdk = new NodeSDK({
       serviceName:   "vakt",
-      traceExporter: new OTLPTraceExporter({ url: endpoint }),
+      traceExporter: new OTLPTraceExporter({ url: endpoint }) as any,
     });
     sdk.start();
     sdkShutdown = () => sdk.shutdown();

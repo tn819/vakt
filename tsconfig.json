@@ -5,6 +5,7 @@
     "moduleResolution": "bundler",
     "strict": true,
     "noUncheckedIndexedAccess": true,
+    "skipLibCheck": true,
     "paths": { "@/*": ["./src/*"] }
   },
   "include": ["src/**/*", "tests/**/*"]
