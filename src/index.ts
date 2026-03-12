@@ -13,6 +13,7 @@ import { registerSearch } from "./commands/search";
 import { registerAudit } from "./commands/audit";
 import { registerDaemon } from "./commands/daemon";
 import { registerProxy } from "./commands/proxy";
+import { registerRuntime } from "./commands/runtime";
 
 const program = new Command();
 program
@@ -33,5 +34,6 @@ registerSearch(program);
 registerAudit(program);
 registerDaemon(program);
 registerProxy(program);
+registerRuntime(program);
 
 program.parse();
