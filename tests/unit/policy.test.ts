@@ -39,6 +39,7 @@ describe("PolicyEngine.checkTool", () => {
     const p: Policy = {
       version: "1",
       default: "allow",
+      registryPolicy: "allow-unverified",
       servers: {
         github: { tools: { deny: ["delete_repo"] } },
         "*": { tools: { allow: ["delete_repo"] } },
@@ -48,7 +49,7 @@ describe("PolicyEngine.checkTool", () => {
   });
 
   it("allows all when default is allow and no rules match", () => {
-    const permissive: Policy = { version: "1", default: "allow" };
+    const permissive: Policy = { version: "1", default: "allow", registryPolicy: "allow-unverified" };
     expect(new PolicyEngine(permissive).checkTool("any", "any_tool")).toBe("allow");
   });
 });

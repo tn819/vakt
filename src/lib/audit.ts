@@ -74,7 +74,7 @@ export class AuditStore {
 
   query(opts: { serverName?: string; since?: number; limit?: number } = {}): any[] {
     const conds: string[] = [];
-    const params: unknown[] = [];
+    const params: import("bun:sqlite").SQLQueryBindings[] = [];
     if (opts.serverName) { conds.push("server_name = ?"); params.push(opts.serverName); }
     if (opts.since)      { conds.push("started_at >= ?"); params.push(opts.since); }
     const where = conds.length ? `WHERE ${conds.join(" AND ")}` : "";
