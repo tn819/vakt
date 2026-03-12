@@ -4,7 +4,7 @@ import { loadPolicy } from "../lib/policy";
 import { AuditStore } from "../lib/audit";
 import { initOtel } from "../lib/otel";
 import { createProxy } from "../daemon/proxy";
-import { randomUUID } from "crypto";
+import { randomUUID } from "node:crypto";
 
 export function registerProxy(program: Command): void {
   program

@@ -10,6 +10,7 @@
     "build": "bun build src/index.ts --compile --outfile dist/vakt",
     "test": "bats tests/",
     "test:unit": "bun test tests/unit/",
+    "test:all": "bun test tests/unit/ && bats tests/",
     "pretest": "chmod +x src/agentctl.sh",
     "prepare": "husky"
   },

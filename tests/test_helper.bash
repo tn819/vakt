@@ -9,6 +9,7 @@ setup_test_env() {
   export SANDBOX_HOME="$(mktemp -d)"
   export HOME="$SANDBOX_HOME"
   export AGENTS_DIR="$SANDBOX_HOME/.agents"
+  export AGENTS_SECRETS_BACKEND="env"  # never trigger macOS keychain dialogs in tests
 }
 
 teardown_test_env() {

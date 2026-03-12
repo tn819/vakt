@@ -1,6 +1,6 @@
 import type { Command } from "commander";
-import { writeFileSync } from "fs";
-import { join } from "path";
+import { writeFileSync } from "node:fs";
+import { join } from "node:path";
 import { loadMcpConfig, loadAgentConfig, AGENTS_DIR } from "../lib/config";
 import { getRuntimeForServer } from "../lib/runtime";
 

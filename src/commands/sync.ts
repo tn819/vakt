@@ -1,13 +1,15 @@
 // src/commands/sync.ts
-import { join } from "path";
-import { existsSync } from "fs";
-import { spawnSync } from "child_process";
+import { join } from "node:path";
+import { existsSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import type { Command } from "commander";
 import { loadMcpConfig, loadAgentConfig, loadProviders, resolveProviderConfigPath, expandHome } from "../lib/config";
 import { loadPolicy } from "../lib/policy";
 import { AuditStore } from "../lib/audit";
 import { resolveAll, formatForProvider, writeJsonConfig, readTomlConfig, toToml, syncSkills } from "../lib/resolver";
-import type { Provider } from "../lib/schemas";
+import type { ResolvedConfig } from "../lib/resolver";
+import type { Provider, McpConfig } from "../lib/schemas";
+import type { Policy } from "../lib/schemas";
 
 const bold = (s: string) => `\x1b[1m${s}\x1b[0m`;
 const green = (s: string) => `\x1b[32m${s}\x1b[0m`;
@@ -94,6 +96,96 @@ async function syncProviderMcp(
   }
 }
 
+function checkRegistryPolicy(policy: Policy | null, mcpConfig: McpConfig): void {
+  if (policy?.registryPolicy !== "registry-only") return;
+  const unverified = Object.keys(mcpConfig).filter(
+    name => !(mcpConfig[name] as any)["registry"]
+  );
+  if (unverified.length > 0) {
+    err(`Sync blocked — policy is registry-only but these servers have no registry field: ${unverified.join(", ")}`);
+    err(`Set policy.registryPolicy to "warn-unverified" or add a registry field to each server.`);
+    process.exit(1);
+  }
+}
+
+function applyProxyWrap(resolved: ResolvedConfig, withProxy: boolean): ResolvedConfig {
+  if (!withProxy) return resolved;
+  return Object.fromEntries(
+    Object.entries(resolved).map(([name, server]) => {
+      if (!("url" in server)) {
+        return [name, { command: "vakt", args: ["proxy", name], env: (server as any).env }];
+      }
+      return [name, server];
+    })
+  ) as ResolvedConfig;
+}
+
+async function syncMcpServers(
+  providers: Provider[],
+  resolved: ResolvedConfig,
+  allMissing: Record<string, string[]>,
+  withProxy: boolean,
+  dryRun: boolean
+): Promise<void> {
+  console.log(`\n${bold("── MCP Servers ─────────────────────────────────────────────")}`);
+
+  // Print each missing-secret warning once, before iterating providers
+  const warnedSecrets = new Set<string>();
+  for (const keys of Object.values(allMissing)) {
+    for (const k of keys) {
+      if (!warnedSecrets.has(k)) {
+        warn(`secret '${k}' not found — set it with: vakt secrets set ${k}`);
+        warnedSecrets.add(k);
+      }
+    }
+  }
+
+  for (const provider of providers) {
+    console.log(`\n  ${bold(provider.displayName)}`);
+    if (!isInstalled(provider.detectCommand)) {
+      warn(`${provider.detectCommand} not found, skipping`);
+      continue;
+    }
+
+    const serversForProvider = applyProxyWrap(resolved, withProxy);
+    const formatted = formatForProvider(serversForProvider as typeof resolved, provider);
+    try {
+      await syncProviderMcp(provider, formatted, dryRun);
+      if (!dryRun) ok(`synced to ${provider.displayName}`);
+    } catch (e) {
+      err(`sync failed for ${provider.displayName}: ${e}`);
+    }
+  }
+}
+
+async function syncSkillsToProviders(
+  providers: Provider[],
+  agentsDir: string,
+  dryRun: boolean
+): Promise<void> {
+  console.log(`\n${bold("── Skills ──────────────────────────────────────────────────")}`);
+  const skillsSource = join(agentsDir, "skills");
+
+  for (const provider of providers) {
+    if (!isInstalled(provider.detectCommand)) continue;
+    if (provider.skills.method === "native") {
+      info(`${provider.displayName} reads ${skillsSource} natively`);
+      continue;
+    }
+    const platformSkillsPath = typeof provider.skills.path === "string"
+      ? provider.skills.path
+      : (provider.skills.path as Record<string, string>)[process.platform] ?? "";
+    const skillsTarget = expandHome(platformSkillsPath);
+
+    if (!skillsTarget) continue;
+    console.log(`\n  ${bold(provider.displayName)}  ${dim(`(${skillsTarget})`)}`);
+    const { linked, skipped, errors } = syncSkills(skillsSource, skillsTarget, dryRun);
+    for (const s of linked) ok(`linked skill: ${s}`);
+    for (const s of skipped) info(`skipped (exists): ${s}`);
+    for (const e of errors) err(e);
+  }
+}
+
 export function registerSync(program: Command): void {
   program
     .command("sync")
@@ -120,16 +212,7 @@ export function registerSync(program: Command): void {
 
       const mcpConfig = loadMcpConfig();
       const policy = loadPolicy();
-      if (policy?.registryPolicy === "registry-only") {
-        const unverified = Object.keys(mcpConfig).filter(
-          name => !(mcpConfig[name] as any)["registry"]
-        );
-        if (unverified.length > 0) {
-          err(`Sync blocked — policy is registry-only but these servers have no registry field: ${unverified.join(", ")}`);
-          err(`Set policy.registryPolicy to "warn-unverified" or add a registry field to each server.`);
-          process.exit(1);
-        }
-      }
+      checkRegistryPolicy(policy, mcpConfig);
 
       const userConfig = loadAgentConfig();
       const allProviders = loadProviders();
@@ -139,71 +222,12 @@ export function registerSync(program: Command): void {
         .filter((p): p is Provider => p !== undefined);
 
       if (!skillsOnly) {
-        console.log(`\n${bold("── MCP Servers ─────────────────────────────────────────────")}`);
-
         const { resolved, allMissing } = await resolveAll(mcpConfig, userConfig.paths);
-
-        // Print each missing-secret warning once, before iterating providers
-        const warnedSecrets = new Set<string>();
-        for (const keys of Object.values(allMissing)) {
-          for (const k of keys) {
-            if (!warnedSecrets.has(k)) {
-              warn(`secret '${k}' not found — set it with: vakt secrets set ${k}`);
-              warnedSecrets.add(k);
-            }
-          }
-        }
-
-        for (const provider of enabledProviders) {
-          console.log(`\n  ${bold(provider.displayName)}`);
-          if (!isInstalled(provider.detectCommand)) {
-            warn(`${provider.detectCommand} not found, skipping`);
-            continue;
-          }
-
-          // --with-proxy: replace each stdio server's command with `vakt proxy <name>`
-          const serversForProvider = withProxy
-            ? Object.fromEntries(
-                Object.entries(resolved).map(([name, server]) => {
-                  if (!("url" in server)) {
-                    return [name, { command: "vakt", args: ["proxy", name], env: (server as any).env }];
-                  }
-                  return [name, server];
-                })
-              )
-            : resolved;
-
-          const formatted = formatForProvider(serversForProvider as typeof resolved, provider);
-          try {
-            await syncProviderMcp(provider, formatted, dryRun);
-            if (!dryRun) ok(`synced to ${provider.displayName}`);
-          } catch (e) {
-            err(`sync failed for ${provider.displayName}: ${e}`);
-          }
-        }
+        await syncMcpServers(enabledProviders, resolved, allMissing, withProxy, dryRun);
       }
 
       if (!mcpOnly) {
-        console.log(`\n${bold("── Skills ──────────────────────────────────────────────────")}`);
-        const skillsSource = join(agentsDir, "skills");
-
-        for (const provider of enabledProviders) {
-          if (!isInstalled(provider.detectCommand)) continue;
-          if (provider.skills.method === "native") {
-            info(`${provider.displayName} reads ${skillsSource} natively`);
-            continue;
-          }
-          const skillsTarget = typeof provider.skills.path === "string"
-            ? expandHome(provider.skills.path)
-            : expandHome((provider.skills.path as Record<string, string>)[process.platform] ?? "");
-
-          if (!skillsTarget) continue;
-          console.log(`\n  ${bold(provider.displayName)}  ${dim(`(${skillsTarget})`)}`);
-          const { linked, skipped, errors } = syncSkills(skillsSource, skillsTarget, dryRun);
-          for (const s of linked) ok(`linked skill: ${s}`);
-          for (const s of skipped) info(`skipped (exists): ${s}`);
-          for (const e of errors) err(e);
-        }
+        await syncSkillsToProviders(enabledProviders, agentsDir, dryRun);
       }
 
       // Record sync event in audit log

@@ -1,5 +1,5 @@
-import { join } from "path";
-import { existsSync, readFileSync } from "fs";
+import { join } from "node:path";
+import { existsSync, readFileSync } from "node:fs";
 import {
   AgentConfigSchema, McpConfigSchema, ProvidersSchema, PLATFORMS,
   type AgentConfig, type McpConfig, type Providers, type Provider, type PlatformKey,
@@ -30,7 +30,7 @@ export function loadProviders(): Providers {
 
 /** Expand {{paths.code}} style templates */
 export function expandPaths(value: string, paths: Record<string, string>): string {
-  return value.replace(/\{\{paths\.(\w+)\}\}/g, (_, key: string) => {
+  return value.replaceAll(/\{\{paths\.(\w+)\}\}/g, (_, key: string) => {
     const val = paths[key] ?? "";
     return val.startsWith("~") ? join(process.env["HOME"] ?? "~", val.slice(1)) : val;
   });

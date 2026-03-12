@@ -1,6 +1,6 @@
 // src/commands/add-server.ts
-import { join } from "path";
-import { existsSync } from "fs";
+import { join } from "node:path";
+import { existsSync } from "node:fs";
 import type { Command } from "commander";
 import { AGENTS_DIR, loadMcpConfig } from "../lib/config";
 import type { McpServer } from "../lib/schemas";

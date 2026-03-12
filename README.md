@@ -35,6 +35,104 @@ Building a good MCP server takes real work — authentication, tool design, test
 
 ---
 
+## What vakt unlocks end-to-end
+
+vakt is a complete runtime layer for MCP — not just a config manager. Here is the full deployment picture:
+
+```
+                      ┌─────────────────────────────────────────────┐
+  Agent               │                  vakt                       │
+  (Claude/Cursor/…) ──┤                                             │
+                      │  policy.json  ──► proxy  ──► MCP server     │
+                      │  audit.db     ◄──         ◄──               │
+                      │  OTel spans   ──────────────────────────►   │
+                      │               runtime: local | cloud sandbox │
+                      └─────────────────────────────────────────────┘
+```
+
+### 1 — Ship your full config anywhere
+
+`~/.agents/` contains no secrets — only named references (`secret:GITHUB_TOKEN`). The entire directory is safe to commit, push to a dotfiles repo, or copy to a remote machine. One `vakt sync` and every installed tool has the complete setup.
+
+```bash
+# On a new machine or a CI runner
+git clone your-dotfiles
+cd your-dotfiles && vakt sync
+# → all providers configured, zero credential exposure
+```
+
+### 2 — Run MCP servers in isolated cloud sandboxes
+
+vakt integrates the [E2B](https://e2b.dev) runtime so any MCP server can be moved off your local machine into an isolated cloud sandbox — same config, same policy, same audit trail.
+
+```bash
+vakt config set runtime.e2b.api_key secret:E2B_API_KEY
+vakt runtime set github e2b       # route this server to the cloud
+vakt runtime set filesystem local  # keep this one local
+vakt runtime list                  # view all assignments
+```
+
+The community maintains a broader catalogue of sandbox technologies at [awesome-sandbox](https://github.com/restyler/awesome-sandbox). Key options relevant to MCP server isolation:
+
+| Sandbox | Technology | SaaS | Self-host | Notes |
+|---------|-----------|------|-----------|-------|
+| [E2B](https://e2b.dev) | Firecracker microVMs | ✓ | ✓ | Built for AI agent workloads; already integrated |
+| [Daytona](https://daytona.io) | Containers | ✓ | ✓ | <200ms startup; dev-environment focused |
+| [microsandbox](https://github.com/microsandbox/microsandbox) | libkrun microVMs | — | ✓ | Lightweight self-hosted alternative |
+| [Kata Containers](https://katacontainers.io) | MicroVMs on Kubernetes | — | ✓ | VM-level isolation, container UX |
+| [Fly.io](https://fly.io) | Firecracker | ✓ | — | Persistent storage + global networking |
+| [gVisor](https://gvisor.dev) | Syscall interception | via Cloud Run | ✓ | Google's approach; used in GKE Sandbox |
+
+### 3 — Enforce tool policy at runtime
+
+`vakt sync --with-proxy` rewrites every provider config so all MCP traffic flows through vakt first. `policy.json` is evaluated on every `tools/call` before it reaches the server — with no changes to the server or the client.
+
+```bash
+vakt sync --with-proxy
+# → provider configs now read: { "command": "vakt", "args": ["proxy", "github"] }
+# → policy.json evaluated on every tool call, fail-closed by default
+```
+
+### 4 — Full audit trail
+
+Every tool call is recorded in `~/.agents/audit.db` (SQLite, zero dependencies) with server name, tool name, policy result, session ID, provider, and timing. Query it any time:
+
+```bash
+vakt audit show --server github --last 24h
+vakt audit export --since 2025-01-01 | jq '[.[] | select(.policy_result == "deny")]'
+```
+
+Pipe the export into any SIEM or log platform for compliance evidence. For teams requiring formal compliance:
+- **SOC 2 Type II** — tool call logs satisfy CC6.8 (logical access) and CC7.2 (monitoring)
+- **ISO 27001 / A.12.4** — audit logging and monitoring controls
+- [**Elastic SIEM**](https://www.elastic.co/security/siem) — ingest `audit export` JSON via Filebeat
+- [**Splunk**](https://www.splunk.com) — ship via HEC or Splunk Connect for JSON
+- [**Microsoft Sentinel**](https://azure.microsoft.com/en-us/products/microsoft-sentinel) — custom connector from audit export
+
+### 5 — Distributed tracing with OpenTelemetry
+
+vakt emits an OTLP trace span for every tool call (server name, tool name, policy result, session ID, latency). Point it at any OTLP-compatible backend:
+
+```bash
+vakt config set otel.endpoint http://localhost:4317   # any OTLP gRPC endpoint
+vakt config set otel.enabled true
+```
+
+| Backend | Type | Endpoint format |
+|---------|------|----------------|
+| [Grafana Tempo](https://grafana.com/oss/tempo/) + [Grafana Cloud](https://grafana.com/products/cloud/) | OSS / SaaS | `https://tempo-prod-*.grafana.net:443` |
+| [Jaeger](https://www.jaegertracing.io) | OSS | `http://localhost:4317` (OTLP gRPC) |
+| [Honeycomb](https://www.honeycomb.io) | SaaS | `https://api.honeycomb.io:443` |
+| [Datadog APM](https://www.datadoghq.com/product/apm/) | SaaS | `https://trace.agent.datadoghq.com` |
+| [New Relic](https://newrelic.com/platform/opentelemetry) | SaaS | `https://otlp.nr-data.net:4317` |
+| [SigNoz](https://signoz.io) | OSS / SaaS | `http://localhost:4317` |
+| [OpenObserve](https://openobserve.ai) | OSS / SaaS | `http://localhost:5081/api/default` |
+| [Axiom](https://axiom.co) | SaaS | `https://api.axiom.co` |
+
+Traces are emitted lazily — the OTel SDK is never loaded if no endpoint is configured.
+
+---
+
 ## Get started
 
 ```bash

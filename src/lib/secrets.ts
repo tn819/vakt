@@ -1,6 +1,6 @@
-import { join } from "path";
-import { existsSync, chmodSync, readFileSync } from "fs";
-import { spawnSync } from "child_process";
+import { join } from "node:path";
+import { existsSync, chmodSync, readFileSync } from "node:fs";
+import { spawnSync } from "node:child_process";
 import { AGENTS_DIR } from "./config";
 
 type Backend = "keychain" | "pass" | "env";
@@ -58,7 +58,7 @@ async function keychainDelete(key: string): Promise<void> {
 async function keychainList(): Promise<string[]> {
   const { stdout } = await run("security", ["dump-keychain"]);
   const matches = [
-    ...stdout.matchAll(new RegExp(`"acct"<blob>="([^"]+)"[\\s\\S]*?"svce"<blob>="${SERVICE}"`, "g")),
+    ...stdout.matchAll(new RegExp(String.raw`"acct"<blob>="([^"]+)"[\s\S]*?"svce"<blob>="${SERVICE}"`, "g")),
   ];
   return matches.map((m) => m[1] ?? "").filter(Boolean);
 }

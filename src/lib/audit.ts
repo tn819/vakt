@@ -1,6 +1,6 @@
 import { Database } from "bun:sqlite";
-import { mkdirSync } from "fs";
-import { dirname, join } from "path";
+import { mkdirSync } from "node:fs";
+import { dirname, join } from "node:path";
 import { AGENTS_DIR } from "./config";
 
 export function defaultAuditDbPath(): string {
