@@ -34,13 +34,13 @@ export function registerAddSkill(program: Command): void {
         symlinkSync(abs, dest);
         console.log(`Linked skill: ${skillName} → ${abs}`);
       }
-      console.log("Run 'agentctl sync' to push to providers.");
+      console.log("Run 'vakt sync' to push to providers.");
     });
 
   cmd.configureOutput({
     outputError(str, write) {
       write(str);
-      write(`\nUsage: agentctl add-skill <path> [name]\n`);
+      write(`\nUsage: vakt add-skill <path> [name]\n`);
     },
   });
 }

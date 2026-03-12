@@ -64,7 +64,7 @@ teardown() {
   run agentctl add-skill "$TEST_SKILL_DIR"
   
   [ "$status" -eq 0 ]
-  [[ "$output" == *"Run 'agentctl sync'"* ]]
+  [[ "$output" == *"Run 'vakt sync'"* ]]
 }
 
 @test "add-skill creates skills directory if needed" {

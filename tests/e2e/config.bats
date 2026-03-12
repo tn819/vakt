@@ -107,5 +107,5 @@ teardown() {
   run agentctl config list
   
   [ "$status" -eq 1 ]
-  [[ "$output" == *"Run 'agentctl init' first"* ]]
+  [[ "$output" == *"Run 'vakt init' first"* ]]
 }

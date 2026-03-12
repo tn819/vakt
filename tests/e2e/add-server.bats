@@ -69,7 +69,7 @@ teardown() {
   run agentctl add-server my-server npx -y my-mcp
   
   [ "$status" -eq 0 ]
-  [[ "$output" == *"Run 'agentctl sync'"* ]]
+  [[ "$output" == *"Run 'vakt sync'"* ]]
 }
 
 @test "add-server fails before init" {
@@ -78,7 +78,7 @@ teardown() {
   run agentctl add-server my-server npx -y my-mcp
   
   [ "$status" -eq 1 ]
-  [[ "$output" == *"Run 'agentctl init' first"* ]]
+  [[ "$output" == *"Run 'vakt init' first"* ]]
 }
 
 @test "add-server handles server name with hyphens" {

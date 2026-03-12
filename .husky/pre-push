@@ -4,5 +4,5 @@ if [ ! -d "$BUN_BIN" ]; then
 fi
 export PATH="/usr/bin:/bin:/usr/local/bin:${BUN_BIN}:/opt/homebrew/bin:${PATH}"
 
-# Fast unit tests (~40ms)
-bun test tests/unit/
+# Full e2e suite (~2min) — runs on push, not every commit
+bats --recursive tests/

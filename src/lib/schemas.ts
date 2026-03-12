@@ -135,3 +135,30 @@ export type McpConfig = z.infer<typeof McpConfigSchema>;
 export type AgentConfig = z.infer<typeof AgentConfigSchema>;
 export type Provider = z.infer<typeof ProviderSchema>;
 export type Providers = z.infer<typeof ProvidersSchema>;
+
+// ── Policy ───────────────────────────────────────────────────────────────────
+
+export type PolicyResult = "allow" | "deny" | "ask";
+export type RegistryPolicy = "allow-unverified" | "warn-unverified" | "registry-only";
+
+export const PolicyServerRulesSchema = z.object({
+  tools: z.object({
+    allow: z.array(z.string()).optional(),
+    deny:  z.array(z.string()).optional(),
+  }).optional(),
+  paths: z.object({
+    allow: z.array(z.string()).optional(),
+    deny:  z.array(z.string()).optional(),
+  }).optional(),
+});
+
+export const PolicySchema = z.object({
+  version:        z.literal("1"),
+  default:        z.enum(["allow", "deny", "ask"]),
+  registryPolicy: z.enum(["allow-unverified", "warn-unverified", "registry-only"])
+    .default("allow-unverified"),
+  servers: z.record(z.string(), PolicyServerRulesSchema).optional(),
+});
+
+export type PolicyServerRules = z.infer<typeof PolicyServerRulesSchema>;
+export type Policy = z.infer<typeof PolicySchema>;
