@@ -29,9 +29,36 @@
                     └──► Windsurf      ~/.codeium/windsurf/mcp_config.json
 ```
 
-Building a good MCP server takes real work — authentication, tool design, testing. The AI tool ecosystem repays that effort by scattering it: different config formats, different secrets stories, different skill directories. Your carefully crafted GitHub MCP lives in Cursor but not Gemini. Your SQL reviewer skill works in Claude Code but not Windsurf.
+**vakt** is the security and operations layer the MCP ecosystem was missing. It gives every AI coding tool — Claude Code, Cursor, Gemini CLI, Codex, OpenCode, Windsurf — a single source of truth with keychain-backed secrets, per-server tool policy, a full audit trail, and cloud sandbox routing. Configure once in `~/.agents/`, sync everywhere, zero credential exposure.
 
-**vakt ends that.** One source of truth in `~/.agents/`, synced everywhere — with keychain-backed secrets, per-server tool policy, a full audit trail, and direct integration with the official MCP registry.
+No other tool combines config portability, runtime policy enforcement, credential security, and compliance-grade audit logging in a single binary.
+
+### How vakt compares
+
+| Capability | **vakt** | Smithery | mcp-get | Manual |
+|---|:---:|:---:|:---:|:---:|
+| Multi-provider sync (6 tools) | ✓ | — | — | — |
+| Keychain-backed secrets | ✓ | — | — | — |
+| Runtime policy enforcement | ✓ | — | — | — |
+| Audit log (SQLite + SIEM export) | ✓ | — | — | — |
+| OTel distributed tracing | ✓ | — | — | — |
+| Official registry verification | ✓ | ✓ | ✓ | — |
+| Cloud sandbox routing (E2B) | ✓ | — | — | — |
+| Skills portability | ✓ | — | — | — |
+
+### Integrations
+
+**AI tools:** Claude Code · Cursor · Gemini CLI · Codex · OpenCode · Windsurf
+
+**Secrets:** macOS Keychain · pass/GPG · env file (CI)
+
+**Observability:** Grafana Tempo · Jaeger · Honeycomb · Datadog APM · New Relic · SigNoz · Axiom
+
+**SIEM / compliance evidence:** Elastic SIEM · Splunk · Microsoft Sentinel · audit export satisfies SOC 2 CC6.8/CC7.2 and ISO 27001 A.12.4
+
+**Runtime DLP:** [crust](https://github.com/BakeLens/crust) (MCP traffic scanning, 34 built-in patterns)
+
+**Sandboxes:** E2B (built-in) · Daytona · microsandbox · Kata Containers
 
 ---
 
