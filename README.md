@@ -7,10 +7,11 @@
    ╚═══╝  ╚═╝  ╚═╝╚═╝  ╚═╝   ╚═╝
 ```
 
-> Secure MCP runtime for AI coding tools — policy enforcement, audit logging, registry verification, and multi-provider sync.
+> One config. All your AI coding tools. Zero credentials on disk.
 
 [![CI](https://github.com/tn819/vakt/actions/workflows/ci.yml/badge.svg)](https://github.com/tn819/vakt/actions/workflows/ci.yml)
 [![Tests](https://github.com/tn819/vakt/actions/workflows/test.yml/badge.svg)](https://github.com/tn819/vakt/actions/workflows/test.yml)
+[![Reliability](https://sonarcloud.io/api/project_badges/measure?project=tn819_agentctl&metric=reliability_rating)](https://sonarcloud.io/summary/new_code?id=tn819_agentctl)
 [![Quality Gate](https://sonarcloud.io/api/project_badges/measure?project=tn819_agentctl&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=tn819_agentctl)
 [![Release](https://img.shields.io/github/v/release/tn819/vakt?label=release&color=22c55e)](https://github.com/tn819/vakt/releases)
 [![TypeScript](https://img.shields.io/badge/TypeScript-5.x-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org/)
@@ -29,9 +30,11 @@
                     └──► Windsurf      ~/.codeium/windsurf/mcp_config.json
 ```
 
-**vakt** is the security and operations layer the MCP ecosystem was missing. It gives every AI coding tool — Claude Code, Cursor, Gemini CLI, Codex, OpenCode, Windsurf — a single source of truth with keychain-backed secrets, per-server tool policy, a full audit trail, and cloud sandbox routing. Configure once in `~/.agents/`, sync everywhere, zero credential exposure.
+Your AI coding tools write API keys into plaintext JSON files. Those files sync to iCloud, end up in dotfiles repos, and get copy-pasted every time a new tool ships. There is no policy layer, no audit trail, and no single source of truth.
 
-No other tool combines config portability, runtime policy enforcement, credential security, and compliance-grade audit logging in a single binary.
+**vakt** fixes this. One `~/.agents/` directory holds your entire MCP setup with no credential values inside. Secrets resolve from your OS keychain at sync time. `vakt sync` writes correct config to every installed tool instantly. A policy engine enforces what each MCP server is allowed to do before any tool call goes through.
+
+Configure once. Sync everywhere. Rotate a key in one place. Audit everything.
 
 ### How vakt compares
 

@@ -80,13 +80,13 @@ function mergeServers(
     if (lTools.allow !== undefined || rTools.allow !== undefined) {
       const rAllow = new Set(rTools.allow ?? []);
       const lAllow = new Set(lTools.allow ?? []);
-      mergedTools.allow = [...new Set([...rAllow, ...lAllow])].sort();
+      mergedTools.allow = [...new Set([...rAllow, ...lAllow])].sort((a, b) => a.localeCompare(b));
     }
 
     if (lTools.deny !== undefined || rTools.deny !== undefined) {
       const rDeny = new Set(rTools.deny ?? []);
       const lDeny = new Set(lTools.deny ?? []);
-      mergedTools.deny = [...new Set([...rDeny, ...lDeny])].sort();
+      mergedTools.deny = [...new Set([...rDeny, ...lDeny])].sort((a, b) => a.localeCompare(b));
     }
 
     merged[name] = { ...remoteCfg, tools: mergedTools };
