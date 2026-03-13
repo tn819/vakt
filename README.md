@@ -221,6 +221,8 @@ Skills, server definitions, and preferences live in `~/.agents/` in open formats
 
 ## 🔐 Security in depth
 
+Full threat model and responsible disclosure: [SECURITY.md](SECURITY.md)
+
 ### Guarantees
 
 - **Zero plaintext secrets on disk.** `~/.agents/mcp-config.json` never contains credential values — only named references (`secret:MY_KEY`). Resolved values exist in memory only, for the duration of a sync.
