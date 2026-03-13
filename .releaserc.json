@@ -46,6 +46,10 @@
           {
             "path": "vakt-*.tar.gz",
             "label": "vakt CLI"
+          },
+          {
+            "path": "checksums.txt",
+            "label": "SHA-256 checksums"
           }
         ]
       }
@@ -61,7 +65,7 @@
   "prepare": [
     {
       "path": "@semantic-release/exec",
-      "cmd": "bun build src/index.ts --compile --outfile dist/vakt && tar -czf /tmp/vakt-${nextRelease.version}.tar.gz dist/vakt && mv /tmp/vakt-${nextRelease.version}.tar.gz ."
+      "cmd": "bun build src/index.ts --compile --outfile dist/vakt && tar -czf /tmp/vakt-${nextRelease.version}.tar.gz dist/vakt && mv /tmp/vakt-${nextRelease.version}.tar.gz . && sha256sum vakt-${nextRelease.version}.tar.gz dist/vakt > checksums.txt"
     }
   ]
 }
