@@ -23,13 +23,16 @@ export function resolveRemoteUrl(base: string, filename: string): string {
   return `${base}/${filename}`;
 }
 
-// Fetch a URL, returns body string or null on error
+// Fetch a URL, returns body string or null on error.
+// Only https:// and file:// are permitted — rejects all other schemes.
 export async function fetchUrl(url: string, token?: string): Promise<string | null> {
   if (url.startsWith("file://")) {
     const localPath = url.slice("file://".length);
     if (!existsSync(localPath)) return null;
     return await Bun.file(localPath).text();
   }
+
+  if (!url.startsWith("https://")) return null; // Reject http:// and all other schemes
 
   const headers: Record<string, string> = { "User-Agent": "vakt/1.0.0" };
   if (token) headers["Authorization"] = `Bearer ${token}`;

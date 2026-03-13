@@ -57,6 +57,10 @@ function installSkill(entry: SkillsIndexEntry, targetDir: string): boolean {
   mkdirSync(targetDir, { recursive: true });
 
   if (entry.type === "git") {
+    if (!entry.url.startsWith("https://")) {
+      console.error(`Rejected: skill URL must use https:// (got: ${entry.url})`);
+      return false;
+    }
     info(`Cloning ${entry.name} from ${entry.url}...`);
     const r = spawnSync("git", ["clone", "--depth", "1", entry.url, dest], {
       encoding: "utf-8",

@@ -1,5 +1,5 @@
 import type { Command } from "commander";
-import { existsSync, mkdirSync, copyFileSync } from "node:fs";
+import { existsSync, mkdirSync, copyFileSync, appendFileSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { spawnSync } from "node:child_process";
 import { loadProviders } from "../lib/config";
@@ -129,7 +129,7 @@ export function registerWatch(program: Command): void {
 
           const timestamp = new Date().toISOString();
           const logLine = `${timestamp} DRIFT_DETECTED path=${changedPath}\n`;
-          await Bun.write(Bun.file(auditLog), logLine);
+          appendFileSync(auditLog, logLine);
 
           err(`drift detected: ${changedPath}`);
 

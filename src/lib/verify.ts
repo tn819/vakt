@@ -5,7 +5,7 @@ export type VerifyResult =
   | { ok: false; reason: string };
 
 function cmdAvailable(cmd: string): boolean {
-  const r = spawnSync("command", ["-v", cmd], { shell: true });
+  const r = spawnSync("which", [cmd], { encoding: "utf-8" });
   return r.status === 0;
 }
 
