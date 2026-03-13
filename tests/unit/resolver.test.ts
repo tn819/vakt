@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import { mkdirSync, readFileSync } from "fs";
+import { mkdirSync, writeFileSync, existsSync, readFileSync } from "fs";
 import { join } from "path";
-import { resolveServer, writeJsonConfig } from "../../src/lib/resolver";
+import { resolveServer, resolveAll, formatForProvider, writeJsonConfig, readTomlConfig, toToml, syncSkills } from "../../src/lib/resolver";
 import { secretsSet } from "../../src/lib/secrets";
+import type { Provider } from "../../src/lib/schemas";
 
 // setup.ts sets AGENTS_SECRETS_BACKEND=env and AGENTS_DIR to a sandbox
 const AGENTS = process.env["AGENTS_DIR"]!;
@@ -87,5 +88,199 @@ describe("writeJsonConfig — output format", () => {
     const filePath = join(AGENTS, "should-not-exist.json");
     await writeJsonConfig(filePath, "mcpServers", { foo: { command: "bar" } }, true);
     expect(() => readFileSync(filePath)).toThrow();
+  });
+});
+
+// Helper — minimal provider fixture
+function makeProvider(structureOverrides: Record<string, unknown> = {}): Provider {
+  return {
+    name: "test-provider",
+    syncMethod: "file",
+    configFormat: "json",
+    serversPropertyName: "mcpServers",
+    configPath: { linux: "~/.test/mcp.json", darwin: "~/.test/mcp.json" },
+    isInstalled: { linux: "test-provider", darwin: "test-provider" },
+    configStructure: {
+      stdioPropertyMapping: {
+        commandProperty: "command",
+        argsProperty: "args",
+        envProperty: "env",
+      },
+      httpPropertyMapping: {
+        urlProperty: "url",
+      },
+      ...structureOverrides,
+    },
+  } as unknown as Provider;
+}
+
+describe("resolveServer — HTTP", () => {
+  it("resolves a plain HTTP URL", async () => {
+    const { server, missing } = await resolveServer("api", {
+      transport: "http",
+      url: "https://api.example.com/mcp",
+    } as any, {});
+    expect((server as any).url).toBe("https://api.example.com/mcp");
+    expect((server as any).transport).toBe("http");
+    expect(missing).toHaveLength(0);
+  });
+
+  it("resolves HTTP server headers containing a secret ref", async () => {
+    await secretsSet("API_KEY", "tok-123");
+    const { server } = await resolveServer("api", {
+      transport: "http",
+      url: "https://api.example.com/mcp",
+      headers: { Authorization: "Bearer secret:API_KEY" },
+    } as any, {});
+    expect((server as any).headers?.["Authorization"]).toBe("Bearer tok-123");
+  });
+});
+
+describe("resolveAll", () => {
+  it("resolves multiple servers and collects missing secrets", async () => {
+    const config = {
+      ok:     { command: "npx", args: ["-y", "mcp-ok"] },
+      broken: { command: "npx", env: { TOKEN: "secret:MISSING_TOKEN_XYZ" } },
+    };
+    const { resolved, allMissing } = await resolveAll(config as any, {});
+    expect((resolved["ok"] as any).command).toBe("npx");
+    expect(allMissing["broken"]).toContain("MISSING_TOKEN_XYZ");
+    expect(allMissing["ok"]).toBeUndefined();
+  });
+});
+
+describe("formatForProvider", () => {
+  it("maps stdio server command and args", () => {
+    const result = formatForProvider(
+      { myserver: { command: "npx", args: ["-y", "mcp-test"] } },
+      makeProvider(),
+    );
+    expect(result["myserver"]?.["command"]).toBe("npx");
+    expect(result["myserver"]?.["args"]).toEqual(["-y", "mcp-test"]);
+  });
+
+  it("maps HTTP server to urlProperty", () => {
+    const result = formatForProvider(
+      { api: { transport: "http", url: "https://example.com/mcp" } as any },
+      makeProvider(),
+    );
+    expect(result["api"]?.["url"]).toBe("https://example.com/mcp");
+  });
+
+  it("merges command+args into one array when commandProperty === argsProperty", () => {
+    const result = formatForProvider(
+      { s: { command: "npx", args: ["-y", "pkg"] } },
+      makeProvider({ stdioPropertyMapping: { commandProperty: "cmd", argsProperty: "cmd" } }),
+    );
+    expect(result["s"]?.["cmd"]).toEqual(["npx", "-y", "pkg"]);
+  });
+
+  it("includes typeProperty when configured", () => {
+    const result = formatForProvider(
+      { s: { command: "npx" } },
+      makeProvider({
+        stdioPropertyMapping: {
+          commandProperty: "command",
+          argsProperty: "args",
+          typeProperty: "type",
+          typeValue: "stdio",
+        },
+      }),
+    );
+    expect(result["s"]?.["type"]).toBe("stdio");
+  });
+
+  it("includes env when envProperty is configured", () => {
+    const result = formatForProvider(
+      { s: { command: "npx", env: { TOKEN: "abc" } } },
+      makeProvider(),
+    );
+    expect(result["s"]?.["env"]).toEqual({ TOKEN: "abc" });
+  });
+});
+
+describe("readTomlConfig", () => {
+  it("returns empty object when file is missing", () => {
+    expect(readTomlConfig("/nonexistent/path.toml")).toEqual({});
+  });
+
+  it("parses a valid TOML file", () => {
+    mkdirSync(AGENTS, { recursive: true });
+    const path = join(AGENTS, "test.toml");
+    writeFileSync(path, '[mcp]\nserver = "test"\n');
+    const result = readTomlConfig(path);
+    expect((result["mcp"] as any)?.server).toBe("test");
+  });
+
+  it("returns empty object on malformed TOML", () => {
+    mkdirSync(AGENTS, { recursive: true });
+    const path = join(AGENTS, "bad.toml");
+    writeFileSync(path, "[[[[not valid toml");
+    expect(readTomlConfig(path)).toEqual({});
+  });
+});
+
+describe("toToml", () => {
+  it("serialises a string value", () => {
+    expect(toToml({ key: "val" })).toContain('key = "val"');
+  });
+
+  it("serialises a boolean", () => {
+    expect(toToml({ flag: true })).toContain("flag = true");
+  });
+
+  it("serialises a number", () => {
+    expect(toToml({ n: 42 })).toContain("n = 42");
+  });
+
+  it("serialises an array as JSON inline", () => {
+    expect(toToml({ arr: [1, 2] })).toContain("arr = [1,2]");
+  });
+
+  it("serialises a nested object as a section header", () => {
+    const result = toToml({ db: { host: "localhost" } });
+    expect(result).toContain("[db]");
+    expect(result).toContain('host = "localhost"');
+  });
+});
+
+describe("syncSkills", () => {
+  it("returns empty results when source dir does not exist", () => {
+    const result = syncSkills("/nonexistent/skills", "/tmp/target-skills-xyz", false);
+    expect(result.linked).toHaveLength(0);
+    expect(result.skipped).toHaveLength(0);
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it("links skills from source to target", () => {
+    mkdirSync(AGENTS, { recursive: true });
+    const src = join(AGENTS, "skills-src");
+    const dst = join(AGENTS, "skills-dst");
+    mkdirSync(join(src, "my-skill"), { recursive: true });
+    writeFileSync(join(src, "my-skill", "SKILL.md"), "---\nname: my-skill\n---\n");
+    const result = syncSkills(src, dst, false);
+    expect(result.linked).toContain("my-skill");
+    expect(result.errors).toHaveLength(0);
+  });
+
+  it("skips already-present skills in target", () => {
+    mkdirSync(AGENTS, { recursive: true });
+    const src = join(AGENTS, "skills-src2");
+    const dst = join(AGENTS, "skills-dst2");
+    mkdirSync(join(src, "existing-skill"), { recursive: true });
+    mkdirSync(join(dst, "existing-skill"), { recursive: true });
+    const result = syncSkills(src, dst, false);
+    expect(result.skipped).toContain("existing-skill");
+  });
+
+  it("dry-run reports linked without creating symlinks", () => {
+    mkdirSync(AGENTS, { recursive: true });
+    const src = join(AGENTS, "skills-src3");
+    const dst = join(AGENTS, "skills-dst3");
+    mkdirSync(join(src, "dry-skill"), { recursive: true });
+    const result = syncSkills(src, dst, true);
+    expect(result.linked[0]).toContain("dry-skill");
+    // target dir must NOT have been created
+    expect(existsSync(dst)).toBe(false);
   });
 });
