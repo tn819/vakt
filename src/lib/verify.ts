@@ -4,8 +4,10 @@ export type VerifyResult =
   | { ok: true; signer: string; source: string }
   | { ok: false; reason: string };
 
+const SAFE_PATH = "/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin";
+
 function cmdAvailable(cmd: string): boolean {
-  const r = spawnSync("which", [cmd], { encoding: "utf-8" });
+  const r = spawnSync("/usr/bin/which", [cmd], { encoding: "utf-8", env: { PATH: SAFE_PATH } });
   return r.status === 0;
 }
 
@@ -15,7 +17,7 @@ export function verifyOci(identifier: string): VerifyResult {
   }
   const r = spawnSync("cosign", ["verify", identifier], {
     encoding: "utf-8",
-    env: process.env as Record<string, string>,
+    env: { ...(process.env as Record<string, string>), PATH: SAFE_PATH },
   });
   if (r.status === 0) {
     let signer = "verified";

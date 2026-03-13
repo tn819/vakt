@@ -12,9 +12,11 @@ const ok     = (s: string) => console.log(`  ${green("✓")}  ${s}`);
 const warn   = (s: string) => console.log(`  ${yellow("⚠")}  ${s}`);
 const err    = (s: string) => console.log(`  ${red("✗")}  ${s}`);
 
+const WHICH = "/usr/bin/which";
+
 function detectWatcher(): "fswatch" | "inotifywait" | null {
-  if (spawnSync("which", ["fswatch"], { encoding: "utf-8" }).status === 0) return "fswatch";
-  if (spawnSync("which", ["inotifywait"], { encoding: "utf-8" }).status === 0) return "inotifywait";
+  if (spawnSync(WHICH, ["fswatch"], { encoding: "utf-8" }).status === 0) return "fswatch";
+  if (spawnSync(WHICH, ["inotifywait"], { encoding: "utf-8" }).status === 0) return "inotifywait";
   return null;
 }
 

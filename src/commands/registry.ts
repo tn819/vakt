@@ -65,6 +65,7 @@ function installSkill(entry: SkillsIndexEntry, targetDir: string): boolean {
     const r = spawnSync("git", ["clone", "--depth", "1", entry.url, dest], {
       encoding: "utf-8",
       stdio: "inherit",
+      env: { ...(process.env as Record<string, string>), PATH: "/usr/local/bin:/usr/bin:/bin:/opt/homebrew/bin" },
     });
     if (r.status !== 0) {
       console.error(`Failed to clone ${entry.name}`);
