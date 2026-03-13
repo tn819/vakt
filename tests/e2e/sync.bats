@@ -224,3 +224,109 @@ PYEOF
   # And it must contain our server
   grep -q "test-server" "$cursor_config"
 }
+
+# ── Output format ─────────────────────────────────────────────────────────────
+
+@test "sync writes provider JSON files with trailing newline" {
+  local bin_dir="$HOME/bin"
+  mkdir -p "$bin_dir"
+  printf '#!/bin/sh\n' > "$bin_dir/cursor"
+  chmod +x "$bin_dir/cursor"
+  export PATH="$bin_dir:$PATH"
+
+  local cursor_config="$HOME/.cursor/mcp.json"
+  mkdir -p "$(dirname "$cursor_config")"
+
+  agentctl add-server test-server npx -y test-mcp
+
+  run agentctl sync
+  [ "$status" -eq 0 ]
+
+  [ -f "$cursor_config" ]
+  # File must end with a newline character
+  last_byte=$(python3 -c "
+import sys
+data = open('$cursor_config', 'rb').read()
+sys.exit(0 if data.endswith(b'\n') else 1)
+")
+  [ "$?" -eq 0 ]
+}
+
+@test "sync preserves non-MCP keys in existing provider JSON file" {
+  local bin_dir="$HOME/bin"
+  mkdir -p "$bin_dir"
+  printf '#!/bin/sh\n' > "$bin_dir/cursor"
+  chmod +x "$bin_dir/cursor"
+  export PATH="$bin_dir:$PATH"
+
+  local cursor_config="$HOME/.cursor/mcp.json"
+  mkdir -p "$(dirname "$cursor_config")"
+  echo '{"someOtherKey": {"nested": true}, "mcpServers": {}}' > "$cursor_config"
+
+  agentctl add-server test-server npx -y test-mcp
+
+  run agentctl sync
+  [ "$status" -eq 0 ]
+
+  python3 -c "
+import json
+cfg = json.load(open('$cursor_config'))
+assert 'someOtherKey' in cfg, 'non-MCP key was clobbered'
+assert cfg['someOtherKey']['nested'] == True
+assert 'test-server' in cfg['mcpServers']
+"
+}
+
+# ── Missing secrets ───────────────────────────────────────────────────────────
+
+@test "sync preserves secret ref string in output when secret is missing" {
+  local bin_dir="$HOME/bin"
+  mkdir -p "$bin_dir"
+  printf '#!/bin/sh\n' > "$bin_dir/cursor"
+  chmod +x "$bin_dir/cursor"
+  export PATH="$bin_dir:$PATH"
+
+  local cursor_config="$HOME/.cursor/mcp.json"
+  mkdir -p "$(dirname "$cursor_config")"
+
+  # Add server with a secret ref that has no corresponding secret set
+  agentctl add-server secret-server npx -y secret-mcp
+  python3 -c "
+import json
+with open('$AGENTS_DIR/mcp-config.json') as f:
+    cfg = json.load(f)
+cfg['secret-server']['env'] = {'MY_TOKEN': 'secret:UNSET_TOKEN_XYZ'}
+with open('$AGENTS_DIR/mcp-config.json', 'w') as f:
+    json.dump(cfg, f, indent=2)
+    f.write('\n')
+"
+
+  run agentctl sync
+  [ "$status" -eq 0 ]
+
+  # The ref string should be in the output, not an empty string
+  python3 -c "
+import json
+cfg = json.load(open('$cursor_config'))
+val = cfg['mcpServers']['secret-server']['env']['MY_TOKEN']
+assert val == 'secret:UNSET_TOKEN_XYZ', 'expected ref string, got: ' + repr(val)
+assert val != '', 'secret ref was replaced with empty string'
+"
+}
+
+@test "sync warns about missing secrets but does not fail" {
+  agentctl add-server secret-server npx -y secret-mcp
+  python3 -c "
+import json
+with open('$AGENTS_DIR/mcp-config.json') as f:
+    cfg = json.load(f)
+cfg['secret-server']['env'] = {'MY_TOKEN': 'secret:DEFINITELY_NOT_SET'}
+with open('$AGENTS_DIR/mcp-config.json', 'w') as f:
+    json.dump(cfg, f, indent=2)
+    f.write('\n')
+"
+
+  run agentctl sync --dry-run
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"DEFINITELY_NOT_SET"* ]]
+}
