@@ -1,0 +1,30 @@
+services:
+  jaeger:
+    image: jaegertracing/all-in-one:1.57
+    environment:
+      COLLECTOR_OTLP_ENABLED: "true"
+    ports:
+      - "16686:16686"
+      - "4317:4317"
+    healthcheck:
+      test: ["CMD", "wget", "--spider", "-q", "http://localhost:14269/"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+      start_period: 5s
+
+  vakt:
+    build:
+      context: ../..
+      dockerfile: tests/docker/Dockerfile
+    depends_on:
+      jaeger:
+        condition: service_healthy
+    environment:
+      JAEGER_URL: http://jaeger:16686
+    networks:
+      - vakt-net
+
+networks:
+  vakt-net:
+    driver: bridge
