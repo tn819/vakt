@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "bun:test";
 import { mkdirSync, writeFileSync } from "fs";
 import { join } from "path";
-import { loadMcpConfig, loadAgentConfig, expandPaths, expandHome } from "../../src/lib/config";
+import { loadMcpConfig, loadAgentConfig, expandPaths, expandHome, loadProviders, resolveProviderConfigPath } from "../../src/lib/config";
 
 // AGENTS_DIR is set by setup.ts preload — points to a sandboxed tmp directory
 const AGENTS = process.env["AGENTS_DIR"]!;
@@ -73,5 +73,32 @@ describe("expandHome", () => {
 
   it("leaves absolute paths unchanged", () => {
     expect(expandHome("/absolute/path")).toBe("/absolute/path");
+  });
+});
+
+describe("loadProviders", () => {
+  it("returns a non-empty providers map", () => {
+    const providers = loadProviders();
+    expect(Object.keys(providers).length).toBeGreaterThan(0);
+  });
+
+  it("each provider has a syncMethod", () => {
+    const providers = loadProviders();
+    for (const [name, p] of Object.entries(providers)) {
+      expect(["file", "cli"]).toContain(p.syncMethod);
+    }
+  });
+});
+
+describe("resolveProviderConfigPath", () => {
+  it("returns a non-empty path for cursor", () => {
+    const providers = loadProviders();
+    const cursor = providers["cursor"];
+    expect(cursor).toBeDefined();
+    if (!cursor) return; // TypeScript narrowing after the expect
+    const path = resolveProviderConfigPath(cursor);
+    expect(path.length).toBeGreaterThan(0);
+    expect(path).not.toContain("$HOME");
+    expect(path).not.toContain("~");
   });
 });
