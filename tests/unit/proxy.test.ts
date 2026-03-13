@@ -109,4 +109,64 @@ describe("createProxy", () => {
     expect(rows[0]!.tool_name).toBe("read_file");
     expect(rows[0]!.policy_result).toBe("allow");
   });
+
+  it("interceptResponse records allowed call when response arrives for tracked id", () => {
+    const store = makeStore();
+    const proxy = createProxy({ serverName: "github", policy: ALLOW_POLICY, store, sessionId: "s3" });
+
+    // Forward an allowed tools/call — this should register the id as pending
+    proxy.interceptRequest(toolCallFrame(42, "list_repos"));
+
+    // Simulate the MCP server responding to id 42
+    const response = Buffer.from(
+      JSON.stringify({ jsonrpc: "2.0", id: 42, result: { content: [] } }) + "\n"
+    );
+    proxy.interceptResponse(response);
+
+    const rows = store.query({ serverName: "github", limit: 10 });
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.tool_name).toBe("list_repos");
+    expect(rows[0]!.policy_result).toBe("allow");
+  });
+
+  it("interceptResponse passes response bytes through unchanged", () => {
+    const store = makeStore();
+    const proxy = createProxy({ serverName: "github", policy: ALLOW_POLICY, store });
+    proxy.interceptRequest(toolCallFrame(7, "list_repos"));
+    const response = Buffer.from(
+      JSON.stringify({ jsonrpc: "2.0", id: 7, result: { content: [] } }) + "\n"
+    );
+    const out = proxy.interceptResponse(response);
+    expect(out.toString()).toContain('"id":7');
+  });
+
+  it("interceptResponse does not record denied calls that were never forwarded", () => {
+    const store = makeStore();
+    const proxy = createProxy({ serverName: "github", policy: DENY_POLICY, store, sessionId: "s4" });
+
+    // denied — id should NOT be tracked
+    proxy.interceptRequest(toolCallFrame(99, "delete_repo"));
+
+    // a response arrives with the same id (shouldn't happen in practice, but must be safe)
+    const response = Buffer.from(
+      JSON.stringify({ jsonrpc: "2.0", id: 99, result: {} }) + "\n"
+    );
+    proxy.interceptResponse(response);
+
+    const rows = store.query({ serverName: "github", limit: 10 });
+    // only the deny entry from interceptRequest — no spurious allow
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.policy_result).toBe("deny");
+  });
+
+  it("interceptResponse ignores responses with unknown ids", () => {
+    const store = makeStore();
+    const proxy = createProxy({ serverName: "github", policy: ALLOW_POLICY, store });
+    // Never sent a request with id 55
+    const response = Buffer.from(
+      JSON.stringify({ jsonrpc: "2.0", id: 55, result: {} }) + "\n"
+    );
+    proxy.interceptResponse(response);
+    expect(store.query({ limit: 10 })).toHaveLength(0);
+  });
 });

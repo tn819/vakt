@@ -121,7 +121,7 @@ export async function writeJsonConfig(
     existing = JSON.parse(await Bun.file(filePath).text());
   }
   existing[serversKey] = servers;
-  const content = JSON.stringify(existing, null, 2);
+  const content = JSON.stringify(existing, null, 2) + "\n";
   if (!dryRun) {
     mkdirSync(dirname(filePath), { recursive: true });
     await Bun.write(filePath, content);

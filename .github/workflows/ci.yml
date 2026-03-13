@@ -65,6 +65,16 @@ jobs:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
         with:
           fetch-depth: 0
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@ecf28ddc73e819eb6fa29df6b34ef8921c743461 # v2
+
+      - name: Install dependencies
+        run: bun install --frozen-lockfile
+
+      - name: Generate coverage report
+        run: bun test --coverage --coverage-reporter lcov
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v3
         env:
