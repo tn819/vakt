@@ -1,0 +1,12 @@
+{
+  "version": "1",
+  "default": "allow",
+  "registryPolicy": "allow-unverified",
+  "servers": {
+    "everything": {
+      "tools": {
+        "deny": ["get-env", "simulate-research-query"]
+      }
+    }
+  }
+}
