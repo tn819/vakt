@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach } from "bun:test";
 import { mkdirSync } from "fs";
-import { resolveSecretRefs, secretsSet, secretsGet, secretsDelete, secretsList, secretsHas, getBackend } from "../../src/lib/secrets";
+import { resolveSecretRefs, secretsSet, secretsGet, secretsDelete, secretsList, secretsHas, getBackend } from "./secrets";
 
 // setup.ts sets AGENTS_SECRETS_BACKEND=env and AGENTS_DIR to a sandbox
 const AGENTS = process.env["AGENTS_DIR"]!;

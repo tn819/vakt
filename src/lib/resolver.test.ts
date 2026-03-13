@@ -1,9 +1,9 @@
 import { describe, it, expect, beforeEach } from "bun:test";
 import { mkdirSync, writeFileSync, existsSync, readFileSync } from "fs";
 import { join } from "path";
-import { resolveServer, resolveAll, formatForProvider, writeJsonConfig, readTomlConfig, toToml, syncSkills } from "../../src/lib/resolver";
-import { secretsSet } from "../../src/lib/secrets";
-import type { Provider } from "../../src/lib/schemas";
+import { resolveServer, resolveAll, formatForProvider, writeJsonConfig, readTomlConfig, toToml, syncSkills } from "./resolver";
+import { secretsSet } from "./secrets";
+import type { Provider } from "./schemas";
 
 // setup.ts sets AGENTS_SECRETS_BACKEND=env and AGENTS_DIR to a sandbox
 const AGENTS = process.env["AGENTS_DIR"]!;

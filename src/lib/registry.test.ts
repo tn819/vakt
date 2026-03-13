@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { RegistryClient } from "../../src/lib/registry";
+import { RegistryClient } from "./registry";
 
 describe("RegistryClient", () => {
   it("builds the correct lookup URL", () => {
