@@ -2,8 +2,8 @@ import { describe, it, expect, beforeEach, afterEach } from "bun:test";
 import { rmSync } from "fs";
 import { tmpdir } from "os";
 import { join } from "path";
-import { createProxy } from "../../src/daemon/proxy";
-import { AuditStore } from "../../src/lib/audit";
+import { createProxy } from "./proxy";
+import { AuditStore } from "../lib/audit";
 
 const DB = join(tmpdir(), `proxy-test-${process.pid}.db`);
 let savedAgentsDir: string | undefined;

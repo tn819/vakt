@@ -1,8 +1,8 @@
 import { describe, it, expect, beforeEach } from "bun:test";
 import { writeFileSync, mkdirSync, rmSync, existsSync } from "fs";
 import { join } from "path";
-import { PolicyEngine, loadPolicy, loadMergedPolicy, mergePolicies } from "../../src/lib/policy";
-import type { Policy } from "../../src/lib/schemas";
+import { PolicyEngine, loadPolicy, loadMergedPolicy, mergePolicies } from "./policy";
+import type { Policy } from "./schemas";
 
 const AGENTS = process.env["AGENTS_DIR"]!;
 

@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "bun:test";
 import { join } from "path";
 import { rmSync } from "fs";
-import { AuditStore } from "../../src/lib/audit";
+import { AuditStore } from "./audit";
 
 const DB = join(process.env["AGENTS_DIR"]!, "audit.db");
 

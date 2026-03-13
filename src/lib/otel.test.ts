@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { recordToolCallSpan, shutdownOtel, initOtel } from "../../src/lib/otel";
+import { recordToolCallSpan, shutdownOtel, initOtel } from "./otel";
 
 const BASE_OPTS = {
   serverName: "github", toolName: "list_repos", runtime: "local",

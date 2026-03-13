@@ -5,4 +5,4 @@ fi
 export PATH="/usr/bin:/bin:/usr/local/bin:${BUN_BIN}:/opt/homebrew/bin:${PATH}"
 
 # Fast unit tests (~40ms)
-bun test tests/unit/
+bun test src/

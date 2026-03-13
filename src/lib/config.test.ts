@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "bun:test";
 import { mkdirSync, writeFileSync } from "fs";
 import { join } from "path";
-import { loadMcpConfig, loadAgentConfig, expandPaths, expandHome, loadProviders, resolveProviderConfigPath } from "../../src/lib/config";
+import { loadMcpConfig, loadAgentConfig, expandPaths, expandHome, loadProviders, resolveProviderConfigPath } from "./config";
 
 // AGENTS_DIR is set by setup.ts preload — points to a sandboxed tmp directory
 const AGENTS = process.env["AGENTS_DIR"]!;

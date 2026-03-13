@@ -1,5 +1,5 @@
 import { describe, it, expect } from "bun:test";
-import { ProcessManager } from "../../src/daemon/process-manager";
+import { ProcessManager } from "./process-manager";
 
 describe("ProcessManager", () => {
   it("lists all configured servers as stopped initially", () => {
