@@ -51,7 +51,7 @@ Configure once. Sync everywhere. Rotate a key in one place. Audit everything.
 
 ### Integrations
 
-**AI tools:** Claude Code · Cursor · Gemini CLI · Codex · OpenCode · Windsurf
+**AI tools:** Claude Code · Cursor · Gemini CLI · Codex · OpenCode · Windsurf · Mistral Vibe
 
 **Secrets:** macOS Keychain · pass/GPG · env file (CI)
 
@@ -445,6 +445,7 @@ vakt daemon status               Show daemon and server process status
 | **Codex** | `~/.codex/config.toml` | `~/.codex/skills/` |
 | **OpenCode** | `~/.config/opencode/opencode.json` | `~/.config/opencode/skills/` |
 | **Windsurf** | `~/.codeium/windsurf/mcp_config.json` | `~/.codeium/windsurf/skills/` |
+| **Mistral Vibe** | `~/.vibe/config.toml` | `~/.vibe/skills/` |
 
 New provider? Add an entry to `providers.json`. No code changes required.
 

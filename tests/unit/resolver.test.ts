@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach } from "bun:test";
-import { mkdirSync, readFileSync } from "fs";
+import { mkdirSync, writeFileSync, existsSync, readFileSync } from "fs";
 import { join } from "path";
-import { resolveServer, writeJsonConfig } from "../../src/lib/resolver";
+import { resolveServer, writeJsonConfig, writeTomlConfig, toTomlArrayOfTables } from "../../src/lib/resolver";
 import { secretsSet } from "../../src/lib/secrets";
 
 // setup.ts sets AGENTS_SECRETS_BACKEND=env and AGENTS_DIR to a sandbox
@@ -87,5 +87,87 @@ describe("writeJsonConfig — output format", () => {
     const filePath = join(AGENTS, "should-not-exist.json");
     await writeJsonConfig(filePath, "mcpServers", { foo: { command: "bar" } }, true);
     expect(() => readFileSync(filePath)).toThrow();
+  });
+});
+
+describe("toTomlArrayOfTables", () => {
+  it("emits [[key]] header for each server", () => {
+    const result = toTomlArrayOfTables("mcp_servers", {
+      github: { transport: "stdio", command: "npx" },
+    });
+    expect(result).toContain("[[mcp_servers]]");
+    expect(result).toContain('name = "github"');
+    expect(result).toContain('transport = "stdio"');
+    expect(result).toContain('command = "npx"');
+  });
+
+  it("emits one block per server separated by a blank line", () => {
+    const result = toTomlArrayOfTables("mcp_servers", {
+      a: { command: "cmd-a" },
+      b: { command: "cmd-b" },
+    });
+    const blocks = result.split("[[mcp_servers]]").filter(Boolean);
+    expect(blocks).toHaveLength(2);
+    expect(result).toContain('name = "a"');
+    expect(result).toContain('name = "b"');
+  });
+
+  it("serialises array args as inline JSON", () => {
+    const result = toTomlArrayOfTables("mcp_servers", {
+      s: { args: ["-y", "pkg"] },
+    });
+    expect(result).toContain('args = ["-y","pkg"]');
+  });
+});
+
+describe("writeTomlConfig — array format", () => {
+  it("writes array-of-tables format for vibe-style providers", async () => {
+    const filePath = join(AGENTS, "vibe-config.toml");
+    await writeTomlConfig(
+      filePath,
+      "mcp_servers",
+      { github: { transport: "stdio", command: "npx", args: ["-y", "@modelcontextprotocol/server-github"] } },
+      "array",
+      false,
+    );
+    const content = readFileSync(filePath, "utf-8");
+    expect(content).toContain("[[mcp_servers]]");
+    expect(content).toContain('name = "github"');
+    expect(content).toContain('transport = "stdio"');
+  });
+
+  it("preserves non-server keys when writing array format", async () => {
+    const filePath = join(AGENTS, "vibe-existing.toml");
+    writeFileSync(filePath, 'model = "mistral-large"\n');
+    await writeTomlConfig(
+      filePath,
+      "mcp_servers",
+      { s: { transport: "stdio", command: "npx" } },
+      "array",
+      false,
+    );
+    const content = readFileSync(filePath, "utf-8");
+    expect(content).toContain('model = "mistral-large"');
+    expect(content).toContain("[[mcp_servers]]");
+  });
+
+  it("dry-run does not write the file", async () => {
+    const filePath = join(AGENTS, "vibe-dryrun.toml");
+    await writeTomlConfig(filePath, "mcp_servers", { s: { command: "npx" } }, "array", true);
+    expect(existsSync(filePath)).toBe(false);
+  });
+
+  it("falls back to record format when serversFormat is record", async () => {
+    const filePath = join(AGENTS, "codex-style.toml");
+    await writeTomlConfig(
+      filePath,
+      "mcp_servers",
+      { myserver: { command: "npx" } },
+      "record",
+      false,
+    );
+    const content = readFileSync(filePath, "utf-8");
+    // Record format uses [mcp_servers] section, not [[mcp_servers]]
+    expect(content).not.toContain("[[mcp_servers]]");
   });
 });
