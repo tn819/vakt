@@ -1,8 +1,18 @@
 #!/usr/bin/env bats
 # Docker e2e harness — real MCP protocol, OTel spans, pass backend, attack simulation
+# These tests are only valid inside the Docker Compose environment (entrypoint.sh
+# imports the GPG key and waits for Jaeger).  When run on the host the entire
+# file is skipped so the pre-push hook keeps working.
 
 load '../test_helper'
 load 'test_helper'
+
+setup_file() {
+  # Skip all tests if not running inside Docker (no /.dockerenv sentinel).
+  if [[ ! -f /.dockerenv ]]; then
+    skip "Docker e2e tests must run inside the Docker Compose container"
+  fi
+}
 
 setup() {
   setup_docker_env
@@ -13,7 +23,8 @@ setup() {
   agentctl add-server everything node "$MCP_SERVER"
 
   # Install policy: deny get-env and simulate-research-query, allow all else
-  cp /app/tests/docker/policy.json "$AGENTS_DIR/policy.json"
+  local _policy_src="${DOCKER_TEST_DIR}/policy.json"
+  cp "$_policy_src" "$AGENTS_DIR/policy.json"
 
   # Configure OTel: spans go to Jaeger gRPC port 4317
   agentctl config set otel.endpoint "http://jaeger:4317"
