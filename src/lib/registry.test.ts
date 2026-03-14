@@ -70,7 +70,7 @@ describe("RegistryClient.lookup", () => {
   it("returns null on 404", async () => {
     const client = new RegistryClient();
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async () => new Response(null, { status: 404 }) as any;
+    (globalThis as any).fetch = async () => new Response(null, { status: 404 });
     try {
       expect(await client.lookup("nonexistent/server")).toBeNull();
     } finally {
@@ -81,7 +81,7 @@ describe("RegistryClient.lookup", () => {
   it("throws on non-404 HTTP error", async () => {
     const client = new RegistryClient();
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async () => new Response(null, { status: 500 }) as any;
+    (globalThis as any).fetch = async () => new Response(null, { status: 500 });
     try {
       await expect(client.lookup("bad/server")).rejects.toThrow("Registry 500");
     } finally {
@@ -93,7 +93,7 @@ describe("RegistryClient.lookup", () => {
     const client = new RegistryClient();
     const payload = { server: { name: "test/server", packages: [] } };
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async () => new Response(JSON.stringify(payload), { status: 200 }) as any;
+    (globalThis as any).fetch = async () => new Response(JSON.stringify(payload), { status: 200 });
     try {
       const result = await client.lookup("test/server");
       expect(result?.server.name).toBe("test/server");
@@ -108,7 +108,7 @@ describe("RegistryClient.search", () => {
     const client = new RegistryClient();
     const payload = { servers: [{ server: { name: "result/server" } }] };
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async () => new Response(JSON.stringify(payload), { status: 200 }) as any;
+    (globalThis as any).fetch = async () => new Response(JSON.stringify(payload), { status: 200 });
     try {
       const results = await client.search("test query");
       expect(results).toHaveLength(1);
@@ -120,7 +120,7 @@ describe("RegistryClient.search", () => {
   it("returns empty array when servers key is absent", async () => {
     const client = new RegistryClient();
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async () => new Response(JSON.stringify({}), { status: 200 }) as any;
+    (globalThis as any).fetch = async () => new Response(JSON.stringify({}), { status: 200 });
     try {
       expect(await client.search("nothing")).toHaveLength(0);
     } finally {
@@ -131,7 +131,7 @@ describe("RegistryClient.search", () => {
   it("throws on HTTP error", async () => {
     const client = new RegistryClient();
     const origFetch = globalThis.fetch;
-    globalThis.fetch = async () => new Response(null, { status: 503 }) as any;
+    (globalThis as any).fetch = async () => new Response(null, { status: 503 });
     try {
       await expect(client.search("q")).rejects.toThrow("Registry search failed");
     } finally {
