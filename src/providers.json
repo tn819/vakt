@@ -188,6 +188,44 @@
     }
   },
 
+  "vibe": {
+    "id": "vibe",
+    "displayName": "Mistral Vibe",
+    "detectCommand": "vibe",
+    "documentationUrl": "https://github.com/mistralai/mistral-vibe",
+    "transports": ["stdio", "http"],
+    "supportedPlatforms": ["darwin", "linux"],
+    "configFormat": "toml",
+    "serversFormat": "array",
+    "configPath": {
+      "darwin": "$HOME/.vibe/config.toml",
+      "linux": "$HOME/.vibe/config.toml"
+    },
+    "configStructure": {
+      "serversPropertyName": "mcp_servers",
+      "httpPropertyMapping": {
+        "typeProperty": "transport",
+        "typeValue": "http",
+        "urlProperty": "url",
+        "headersProperty": "headers"
+      },
+      "stdioPropertyMapping": {
+        "typeProperty": "transport",
+        "typeValue": "stdio",
+        "commandProperty": "command",
+        "argsProperty": "args",
+        "envProperty": "env"
+      }
+    },
+    "skills": {
+      "path": {
+        "darwin": "$HOME/.vibe/skills",
+        "linux": "$HOME/.vibe/skills"
+      },
+      "method": "symlink"
+    }
+  },
+
   "windsurf": {
     "id": "windsurf",
     "displayName": "Windsurf",

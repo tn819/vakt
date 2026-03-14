@@ -6,7 +6,7 @@ import type { Command } from "commander";
 import { loadMcpConfig, loadAgentConfig, loadProviders, resolveProviderConfigPath, expandHome } from "../lib/config";
 import { loadPolicy } from "../lib/policy";
 import { AuditStore } from "../lib/audit";
-import { resolveAll, formatForProvider, writeJsonConfig, readTomlConfig, toToml, syncSkills } from "../lib/resolver";
+import { resolveAll, formatForProvider, writeJsonConfig, writeTomlConfig, syncSkills } from "../lib/resolver";
 import type { ResolvedConfig } from "../lib/resolver";
 import type { Provider, McpConfig } from "../lib/schemas";
 import type { Policy } from "../lib/schemas";
@@ -83,16 +83,10 @@ async function syncProviderMcp(
     if (!dryRun) ok(`wrote ${configPath}`);
     else info(`[dry-run] Would write ${configPath}`);
   } else if (provider.configFormat === "toml") {
-    // Read existing TOML and merge so non-server keys are preserved
-    const existing = readTomlConfig(configPath) as Record<string, unknown>;
-    existing[serversKey] = servers;
-    const toml = toToml(existing);
-    if (!dryRun) {
-      await Bun.write(configPath, toml);
-      ok(`wrote ${configPath}`);
-    } else {
-      info(`[dry-run] Would write ${configPath}`);
-    }
+    const serversFormat = provider.serversFormat ?? "record";
+    await writeTomlConfig(configPath, serversKey, servers, serversFormat, dryRun);
+    if (!dryRun) ok(`wrote ${configPath}`);
+    else info(`[dry-run] Would write ${configPath}`);
   }
 }
 

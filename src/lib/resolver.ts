@@ -148,6 +148,68 @@ export function toToml(data: Record<string, unknown>, _indent = 0): string {
   return lines.join("\n");
 }
 
+/**
+ * Serialise a record of servers as TOML array-of-tables.
+ * Each entry gets a `name` field injected from the record key.
+ *
+ *   [[mcp_servers]]
+ *   name = "github"
+ *   transport = "stdio"
+ *   ...
+ */
+export function toTomlArrayOfTables(
+  key: string,
+  servers: Record<string, Record<string, unknown>>
+): string {
+  return Object.entries(servers)
+    .map(([name, fields]) => {
+      const lines = [`[[${key}]]`, `name = ${JSON.stringify(name)}`];
+      for (const [k, v] of Object.entries(fields)) {
+        if (typeof v === "string") lines.push(`${k} = ${JSON.stringify(v)}`);
+        else if (typeof v === "number" || typeof v === "boolean") lines.push(`${k} = ${v}`);
+        else if (Array.isArray(v)) lines.push(`${k} = ${JSON.stringify(v)}`);
+        else if (v && typeof v === "object") lines.push(`${k} = ${JSON.stringify(v)}`); // inline table
+      }
+      return lines.join("\n");
+    })
+    .join("\n\n");
+}
+
+/**
+ * Write MCP server config to a TOML file, preserving existing non-server keys.
+ * Supports both record format ([mcp_servers.name]) and array-of-tables ([[mcp_servers]]).
+ */
+export async function writeTomlConfig(
+  filePath: string,
+  serversKey: string,
+  servers: Record<string, Record<string, unknown>>,
+  serversFormat: "record" | "array",
+  dryRun: boolean
+): Promise<void> {
+  const existing = readTomlConfig(filePath) as Record<string, unknown>;
+  let content: string;
+
+  if (serversFormat === "array") {
+    // Rebuild file: all non-server keys first, then the array-of-tables block
+    const rest: Record<string, unknown> = {};
+    for (const [k, v] of Object.entries(existing)) {
+      if (k !== serversKey) rest[k] = v;
+    }
+    const parts: string[] = [];
+    if (Object.keys(rest).length > 0) parts.push(toToml(rest));
+    if (Object.keys(servers).length > 0) parts.push(toTomlArrayOfTables(serversKey, servers));
+    content = parts.join("\n\n") + "\n";
+  } else {
+    existing[serversKey] = servers;
+    content = toToml(existing) + "\n";
+  }
+
+  if (!dryRun) {
+    mkdirSync(dirname(filePath), { recursive: true });
+    await Bun.write(filePath, content);
+  }
+}
+
 export function syncSkills(
   skillsSource: string,
   skillsTarget: string,
