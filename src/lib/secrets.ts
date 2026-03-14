@@ -8,7 +8,7 @@ const SERVICE = process.env["AGENTS_SERVICE"] ?? "vakt";
 const ENV_FILE = join(AGENTS_DIR, "secrets.env");
 
 async function run(cmd: string, args: string[]): Promise<{ stdout: string; ok: boolean }> {
-  const timeoutMs = parseInt(process.env["AGENTS_RUN_TIMEOUT_MS"] ?? "3000", 10);
+  const timeoutMs = Number.parseInt(process.env["AGENTS_RUN_TIMEOUT_MS"] ?? "3000", 10);
   try {
     const proc = Bun.spawn([cmd, ...args], { stdout: "pipe", stderr: "pipe" });
     const timeoutPromise = new Promise<{ stdout: string; ok: boolean }>((resolve) => {

@@ -21,7 +21,7 @@ export function registerDaemon(program: Command): void {
 
   daemon.command("stop").description("Stop the daemon").action(() => {
     if (!existsSync(PID_PATH)) { console.log("Daemon not running."); return; }
-    const pid = parseInt(readFileSync(PID_PATH, "utf-8"), 10);
+    const pid = Number.parseInt(readFileSync(PID_PATH, "utf-8"), 10);
     process.kill(pid, "SIGTERM");
     console.log(`✓ Sent SIGTERM to daemon (pid ${pid})`);
   });
