@@ -148,6 +148,14 @@ export function toToml(data: Record<string, unknown>, _indent = 0): string {
   return lines.join("\n");
 }
 
+/** Serialise a flat string-valued record as a TOML inline table: { k = "v", ... } */
+function toTomlInlineTable(obj: Record<string, string>): string {
+  const pairs = Object.entries(obj)
+    .map(([k, v]) => `${k} = ${JSON.stringify(v)}`)
+    .join(", ");
+  return `{ ${pairs} }`;
+}
+
 /**
  * Serialise a record of servers as TOML array-of-tables.
  * Each entry gets a `name` field injected from the record key.
@@ -168,7 +176,7 @@ export function toTomlArrayOfTables(
         if (typeof v === "string") lines.push(`${k} = ${JSON.stringify(v)}`);
         else if (typeof v === "number" || typeof v === "boolean") lines.push(`${k} = ${v}`);
         else if (Array.isArray(v)) lines.push(`${k} = ${JSON.stringify(v)}`);
-        else if (v && typeof v === "object") lines.push(`${k} = ${JSON.stringify(v)}`); // inline table
+        else if (v && typeof v === "object") lines.push(`${k} = ${toTomlInlineTable(v as Record<string, string>)}`);
       }
       return lines.join("\n");
     })
