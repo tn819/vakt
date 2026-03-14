@@ -118,6 +118,20 @@ describe("toTomlArrayOfTables", () => {
     });
     expect(result).toContain('args = ["-y","pkg"]');
   });
+
+  it("serialises env/headers objects as valid TOML inline tables, not JSON", () => {
+    const result = toTomlArrayOfTables("mcp_servers", {
+      github: {
+        transport: "stdio",
+        command: "npx",
+        env: { GITHUB_TOKEN: "ghp_test", NODE_ENV: "production" },
+      },
+    });
+    // Must use TOML inline-table syntax (= not :)
+    expect(result).toContain('env = { GITHUB_TOKEN = "ghp_test", NODE_ENV = "production" }');
+    // Must NOT contain JSON object syntax
+    expect(result).not.toContain('{"GITHUB_TOKEN"');
+  });
 });
 
 describe("writeTomlConfig — array format", () => {
