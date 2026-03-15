@@ -62,18 +62,27 @@ vakt/
 │   ├── daemon/                   # Background process manager + IPC server
 │   │   ├── index.ts
 │   │   ├── ipc.ts
+│   │   ├── process-manager.test.ts
 │   │   ├── process-manager.ts
+│   │   ├── proxy.test.ts
 │   │   └── proxy.ts
 │   └── lib/                      # Shared libraries — pure functions, no CLI side effects
+│       ├── audit.test.ts
 │       ├── audit.ts
+│       ├── config.test.ts
 │       ├── config.ts
+│       ├── otel.test.ts
 │       ├── otel.ts
+│       ├── policy.test.ts
 │       ├── policy.ts
+│       ├── registry.test.ts
 │       ├── registry.ts
 │       ├── remote.ts
+│       ├── resolver.test.ts
 │       ├── resolver.ts
 │       ├── runtime.ts
 │       ├── schemas.ts
+│       ├── secrets.test.ts
 │       ├── secrets.ts
 │       └── verify.ts
 ├── tests/

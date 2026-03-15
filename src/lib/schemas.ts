@@ -156,6 +156,12 @@ export const ProviderSchema = z
     supportedPlatforms: z.array(z.enum(PLATFORMS)),
     /** File format of the provider's config file. */
     configFormat: z.enum(["json", "toml"]),
+    /**
+     * How MCP servers are stored in the config file.
+     * "record" (default): keyed object { "server-name": { ... } }
+     * "array": array of tables with an injected "name" field [{ name: "server-name", ... }]
+     */
+    serversFormat: z.enum(["record", "array"]).default("record"),
     /** How to write MCP config during sync. Defaults to "file". */
     syncMethod: z.enum(["file", "cli"]).default("file"),
     /** Primary config file path, keyed by platform. */

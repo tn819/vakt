@@ -45,8 +45,11 @@ jobs:
         run: |
           export PATH="$PWD/src:$HOME/.bun/bin:$PATH"
           export AGENTS_SECRETS_BACKEND=env
-          bun test tests/unit/
+          bun test src/
           bats tests/e2e/
+
+      - name: Configure git for semantic-release
+        run: git remote set-url origin https://x-access-token:${{ secrets.GITHUB_TOKEN }}@github.com/${{ github.repository }}.git
 
       - name: Release
         env:
