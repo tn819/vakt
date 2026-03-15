@@ -16,6 +16,27 @@ if git diff --name-only HEAD @{u} 2>/dev/null | grep -q '^src/'; then
   fi
 fi
 
-# Full e2e suite — runs on every push
-# tests/docker/ requires Docker Compose and runs in CI only; explicitly exclude it
-bats --recursive tests/e2e/
+# Skip tests when only non-code files changed (.github/, docs, config files, etc.)
+changed=$(git diff --name-only HEAD @{u} 2>/dev/null)
+if [ -n "$changed" ] && ! echo "$changed" | grep -qE '^(src|tests)/'; then
+  exit 0
+fi
+
+# Prevent SIGPIPE from killing bats when git closes its stdout pipe
+trap '' PIPE
+
+# Run unit tests and e2e suite in parallel; bats --jobs parallelises across test files
+# (requires GNU parallel; falls back to serial bats if not available)
+# tests/docker/ requires Docker Compose — CI only, excluded here
+BATS_FLAGS="--recursive"
+command -v parallel >/dev/null 2>&1 && BATS_FLAGS="--jobs 4 --recursive"
+
+bun test src/ &
+unit_pid=$!
+bats $BATS_FLAGS tests/e2e/ &
+e2e_pid=$!
+
+wait $unit_pid; unit_exit=$?
+wait $e2e_pid; e2e_exit=$?
+
+[ $unit_exit -eq 0 ] && [ $e2e_exit -eq 0 ]
