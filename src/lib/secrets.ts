@@ -80,7 +80,8 @@ async function keychainList(): Promise<string[]> {
 // ── pass (Linux GPG) ──────────────────────────────────────────────────────────
 
 async function passSet(key: string, value: string): Promise<void> {
-  const proc = Bun.spawn(["pass", "insert", "--force", `${SERVICE}/${key}`], {
+  // --echo: read password once (no confirmation prompt) — required for non-TTY stdin
+  const proc = Bun.spawn(["pass", "insert", "--force", "--echo", `${SERVICE}/${key}`], {
     stdin: new TextEncoder().encode(value),
     stdout: "pipe",
     stderr: "pipe",

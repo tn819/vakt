@@ -2,7 +2,7 @@ import type { Command } from "commander";
 import { loadMcpConfig, loadAgentConfig } from "../lib/config";
 import { loadPolicy } from "../lib/policy";
 import { AuditStore } from "../lib/audit";
-import { initOtel } from "../lib/otel";
+import { initOtel, shutdownOtel } from "../lib/otel";
 import { createProxy } from "../daemon/proxy";
 import { randomUUID } from "node:crypto";
 
@@ -62,6 +62,7 @@ export function registerProxy(program: Command): void {
 
       void proc.exited.then(async (code) => {
         await stdoutDone;
+        await shutdownOtel();
         process.exit(code ?? 0);
       });
     });

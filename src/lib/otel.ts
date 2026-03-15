@@ -22,7 +22,6 @@ export async function initOtel(endpoint?: string): Promise<void> {
     });
     sdk.start();
     sdkShutdown = () => sdk.shutdown();
-    process.on("exit", () => { void sdk.shutdown(); });
   }
 
   tracer = trace.getTracer("vakt");

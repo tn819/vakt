@@ -1,0 +1,3 @@
+node_modules/
+# Override root .gitignore to commit the lockfile for reproducible Docker builds
+!package-lock.json

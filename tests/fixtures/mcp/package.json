@@ -1,0 +1,9 @@
+{
+  "name": "vakt-mcp-test-fixture",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Pinned MCP reference server for Docker e2e tests",
+  "dependencies": {
+    "@modelcontextprotocol/server-everything": "2026.1.26"
+  }
+}

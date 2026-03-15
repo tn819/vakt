@@ -1,0 +1,7 @@
+node_modules/
+tests/fixtures/mcp/node_modules/
+.git/
+.worktrees/
+coverage/
+dist/
+*.log

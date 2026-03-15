@@ -187,6 +187,7 @@ describe("writeTomlConfig — array format", () => {
   });
 });
 
+
 // Helper — minimal provider fixture
 function makeProvider(structureOverrides: Record<string, unknown> = {}): Provider {
   return {
