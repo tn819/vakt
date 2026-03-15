@@ -17,17 +17,17 @@ setup_file() {
 setup() {
   setup_docker_env
 
-  agentctl init
+  vakt init
 
   # Register the real MCP server (node runs the server-everything binary)
-  agentctl add-server everything node "$MCP_SERVER"
+  vakt add-server everything node "$MCP_SERVER"
 
   # Install policy: deny get-env and simulate-research-query, allow all else
   local _policy_src="${DOCKER_TEST_DIR}/policy.json"
   cp "$_policy_src" "$AGENTS_DIR/policy.json"
 
   # Configure OTel: spans go to Jaeger gRPC port 4317
-  agentctl config set otel.endpoint "http://jaeger:4317"
+  vakt config set otel.endpoint "http://jaeger:4317"
 }
 
 teardown() {
@@ -107,11 +107,18 @@ teardown() {
   out=$(proxy_call everything \
     '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"get-env","arguments":{}}}')
 
-  # The only tools/call-related JSON-RPC line should be vakt's error frame.
-  # If the server had received and processed it, the response would contain env var data.
-  # The server should NOT have sent a tools/call result
-  echo "$out" | grep -qv '"PATH"'   # env dump would contain PATH
-  echo "$out" | grep -q '"error"'   # vakt error frame must be present
+  # vakt error frame must be present in the response
+  echo "$out" | grep -q '"error"'
+  echo "$out" | grep -q "denied by policy"
+  # Audit log is ground truth: a deny entry with no allow entry proves the
+  # frame was never forwarded to the MCP server.
+  assert_audit_entry "everything" "get-env" "deny"
+  local audit_out
+  audit_out=$(vakt audit show --server everything 2>&1)
+  if echo "$audit_out" | grep -w "get-env" | grep -qwi "allow"; then
+    echo "Audit shows allow for get-env — frame was forwarded to MCP server" >&2
+    return 1
+  fi
 }
 
 # ── Attack simulation ─────────────────────────────────────────────────────────
@@ -171,17 +178,17 @@ teardown() {
 
 @test "pass backend: secret set and retrieved" {
   init_pass_store
-  agentctl secrets set MY_TOKEN "super-secret-value"
+  vakt secrets set MY_TOKEN "super-secret-value"
   local val
-  val=$(agentctl secrets get MY_TOKEN)
+  val=$(vakt secrets get MY_TOKEN)
   [ "$val" = "super-secret-value" ]
 }
 
 @test "pass backend: list shows stored secret key" {
   init_pass_store
-  agentctl secrets set LISTED_KEY "some-value"
+  vakt secrets set LISTED_KEY "some-value"
   local out
-  out=$(agentctl secrets list 2>&1)
+  out=$(vakt secrets list 2>&1)
   echo "$out" | grep -qw "LISTED_KEY"
 }
 
@@ -198,7 +205,7 @@ teardown() {
     > /dev/null
 
   # Give Jaeger time to ingest spans (OTLP gRPC is async)
-  sleep 3
+  wait_for_spans
 
   local traces
   traces=$(jaeger_traces)
@@ -212,7 +219,7 @@ teardown() {
     '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"echo","arguments":{"message":"attr-test"}}}' \
     > /dev/null
 
-  sleep 3
+  wait_for_spans
 
   local traces
   traces=$(jaeger_traces)
@@ -228,7 +235,7 @@ teardown() {
     '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"echo","arguments":{"message":"attr-test-2"}}}' \
     > /dev/null
 
-  sleep 3
+  wait_for_spans
 
   local traces
   traces=$(jaeger_traces)

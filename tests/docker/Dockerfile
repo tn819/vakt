@@ -7,7 +7,9 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # ── Bun ───────────────────────────────────────────────────────────────────────
-# Note: installs latest Bun; no version pin (intentional for test harness)
+# Intentionally unpinned: the project's install.sh also fetches latest Bun, so
+# this container mirrors production install behaviour.  A breaking Bun release
+# will surface here and in the install script at the same time.
 RUN curl -fsSL https://bun.sh/install | bash
 ENV PATH="/root/.bun/bin:${PATH}"
 

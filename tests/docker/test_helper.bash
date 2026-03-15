@@ -2,7 +2,7 @@
 
 DOCKER_TEST_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 PROJECT_ROOT="$(cd "$DOCKER_TEST_DIR/../.." && pwd)"
-export AGENTCTL="${PROJECT_ROOT}/src/agentctl.sh"
+export VAKT="${PROJECT_ROOT}/src/vakt.sh"
 MCP_SERVER="${PROJECT_ROOT}/tests/fixtures/mcp/node_modules/@modelcontextprotocol/server-everything/dist/index.js"
 export MCP_SERVER
 
@@ -22,12 +22,14 @@ teardown_docker_env() {
   fi
 }
 
-agentctl() {
-  "$AGENTCTL" "$@"
+vakt() {
+  "$VAKT" "$@"
 }
 
-# Send JSON-RPC messages to `agentctl proxy <server>` with MCP initialize handshake prepended.
+# Send JSON-RPC messages to `vakt proxy <server>` with MCP initialize handshake prepended.
 # Usage: proxy_call <server-name> <json-rpc-line> [<json-rpc-line>...]
+# Note: stderr is merged into stdout (2>&1) so vakt startup errors are visible in test output,
+# but callers cannot distinguish vakt errors from MCP server output.
 proxy_call() {
   local server_name="$1"
   shift
@@ -37,7 +39,7 @@ proxy_call() {
     for msg in "$@"; do
       printf '%s\n' "$msg"
     done
-  } | agentctl proxy "$server_name" 2>&1
+  } | vakt proxy "$server_name" 2>&1
 }
 
 # Assert the audit log contains an entry for the given tool and policy result.
@@ -47,13 +49,13 @@ assert_audit_entry() {
   local tool="$2"
   local result="$3"
   local output
-  output=$(agentctl audit show --server "$server" 2>&1)
+  output=$(vakt audit show --server "$server" 2>&1)
   if ! echo "$output" | grep -qw "$tool"; then
     echo "Expected audit entry for tool '$tool' on server '$server'" >&2
     echo "Audit output: $output" >&2
     return 1
   fi
-  if ! echo "$output" | grep -w "$tool" | grep -qi "$result"; then
+  if ! echo "$output" | grep -w "$tool" | grep -qwi "$result"; then
     echo "Expected audit entry for '$tool' to have result '$result'" >&2
     echo "Audit output: $output" >&2
     return 1
@@ -65,14 +67,14 @@ assert_audit_entry() {
 # via pass (rather than the default env backend).
 init_pass_store() {
   export AGENTS_SECRETS_BACKEND="pass"
-  local key_id
-  key_id=$(gpg --list-secret-keys --with-colons 2>/dev/null \
-    | awk -F: '/^sec/{print $5; exit}')
-  if [[ -z "$key_id" ]]; then
+  local fingerprint
+  fingerprint=$(gpg --list-secret-keys --with-colons --fingerprint 2>/dev/null \
+    | awk -F: '/^fpr/{print $10; exit}')
+  if [[ -z "$fingerprint" ]]; then
     echo "No GPG key found in GNUPGHOME=$GNUPGHOME" >&2
     return 1
   fi
-  pass init "$key_id"
+  pass init "$fingerprint"
 }
 
 # Wait until Jaeger REST API is reachable (up to 30s).
@@ -84,6 +86,21 @@ wait_for_jaeger() {
     ((i++))
     if [[ $i -ge 30 ]]; then
       echo "Jaeger not reachable at $url after 30s" >&2
+      return 1
+    fi
+  done
+}
+
+# Poll Jaeger until at least one trace is present for service=vakt (up to 30s).
+wait_for_spans() {
+  local url="${JAEGER_URL:-http://jaeger:16686}"
+  local i=0
+  until curl -sf "${url}/api/traces?service=vakt&limit=1" 2>/dev/null \
+      | jq -e '.data | length > 0' > /dev/null 2>&1; do
+    sleep 1
+    ((i++))
+    if [[ $i -ge 30 ]]; then
+      echo "No spans for service 'vakt' in Jaeger after 30s" >&2
       return 1
     fi
   done

@@ -12,13 +12,19 @@ gpg --batch --import "$FIXTURE_KEY"
 GPG_FINGERPRINT=$(gpg --with-colons --fingerprint 2>/dev/null \
   | awk -F: '/^fpr/{print $10; exit}')
 echo "${GPG_FINGERPRINT}:6:" | gpg --import-ownertrust
-GPG_KEY_ID=$(gpg --list-secret-keys --with-colons 2>/dev/null \
-  | awk -F: '/^sec/{print $5; exit}')
-echo "    Key ID: $GPG_KEY_ID"
+GPG_KEY_ID=$(gpg --list-secret-keys --with-colons --fingerprint 2>/dev/null \
+  | awk -F: '/^fpr/{print $10; exit}')
+echo "    Fingerprint: $GPG_KEY_ID"
 
 echo "==> Waiting for Jaeger..."
+_jaeger_wait=0
 until curl -sf "${JAEGER_URL:-http://jaeger:16686}/api/services" > /dev/null 2>&1; do
   sleep 1
+  ((_jaeger_wait++))
+  if [[ $_jaeger_wait -ge 60 ]]; then
+    echo "Jaeger not reachable at ${JAEGER_URL:-http://jaeger:16686} after 60s" >&2
+    exit 1
+  fi
 done
 echo "    Jaeger ready."
 
