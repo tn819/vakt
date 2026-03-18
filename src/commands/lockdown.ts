@@ -2,7 +2,8 @@ import type { Command } from "commander";
 import { existsSync, mkdirSync } from "node:fs";
 import { join, dirname } from "node:path";
 import { loadMcpConfig } from "../lib/config";
-import type { McpConfig } from "../lib/schemas";
+import type { McpConfig, McpServer } from "../lib/schemas";
+import { verifyPackage } from "../lib/verify";
 
 const bold   = (s: string) => `\x1b[1m${s}\x1b[0m`;
 const green  = (s: string) => `\x1b[32m${s}\x1b[0m`;
@@ -17,6 +18,22 @@ const dry    = (s: string) => console.log(`  ${dim("[dry-run]")}  ${s}`);
 function writeJsonFile(path: string, data: unknown): void {
   mkdirSync(dirname(path), { recursive: true });
   Bun.write(path, JSON.stringify(data, null, 2) + "\n");
+}
+
+async function auditSupplyChain(mcpConfig: McpConfig): Promise<void> {
+  for (const [name, cfg] of Object.entries(mcpConfig)) {
+    const pkgInfo = resolveVerifyTarget(cfg);
+    if (!pkgInfo) {
+      info(`${name}: verification not applicable`);
+      continue;
+    }
+    const vResult = await verifyPackage(pkgInfo.pkgType, pkgInfo.identifier, pkgInfo.version);
+    if (vResult.ok) {
+      ok(`${name}: verified (${vResult.signer}, ${vResult.source})`);
+    } else {
+      warn(`${name}: unverified — ${vResult.reason}`);
+    }
+  }
 }
 
 export function registerLockdown(program: Command): void {
@@ -45,6 +62,11 @@ export function registerLockdown(program: Command): void {
       console.log("");
       console.log(bold("vakt lockdown"));
       if (opts.dryRun) console.log(yellow("DRY RUN — no changes will be made"));
+      console.log("");
+
+      // ── Supply-chain verification ───────────────────────────────────────────
+      console.log(bold("── Supply-chain verification ────────────────────────────────"));
+      await auditSupplyChain(mcpConfig);
       console.log("");
 
       // ── Layer 1a: Claude Code managed-mcp.json ─────────────────────────────
@@ -122,9 +144,29 @@ Do not suggest or use MCP servers not in this list without explicit admin approv
       }
       console.log("");
 
-      // Suppress unused variable warning
-      void warn;
     });
+}
+
+interface VerifyTarget {
+  pkgType: "oci" | "npm" | "npx";
+  identifier: string;
+  version?: string;
+}
+
+function resolveVerifyTarget(cfg: McpServer): VerifyTarget | null {
+  if ("transport" in cfg) return null; // HTTP servers can't be verified via npm/oci
+  const { command, args = [] } = cfg;
+  if (command === "docker" && args.includes("run")) {
+    // docker run [flags] <image> — image is the first non-flag arg after "run"
+    const image = args.slice(args.indexOf("run") + 1).find((a) => !a.startsWith("-"));
+    if (image) return { pkgType: "oci", identifier: image };
+  }
+  if (command === "npx" || command === "bunx" || command === "pnpx") {
+    // npx [-y] <package> [args...] — find first non-flag arg
+    const pkg = args.find((a) => !a.startsWith("-"));
+    if (pkg) return { pkgType: "npx", identifier: pkg };
+  }
+  return null;
 }
 
 function generateMdmProfile(home: string): string {

@@ -4,6 +4,7 @@ import { join } from "node:path";
 import { spawnSync } from "node:child_process";
 import { loadAgentConfig } from "../lib/config";
 import { SkillsIndexSchema, type SkillsIndexEntry } from "../lib/schemas";
+import { verifyPackage } from "../lib/verify";
 
 const bold   = (s: string) => `\x1b[1m${s}\x1b[0m`;
 const green  = (s: string) => `\x1b[32m${s}\x1b[0m`;
@@ -164,6 +165,12 @@ export function registerRegistry(program: Command): void {
       if (!entry) {
         console.error(`Skill '${name}' not found in registry.`);
         process.exit(1);
+      }
+      const vResult = await verifyPackage("npm", entry.name, entry.version);
+      if (vResult.ok) {
+        ok(`supply-chain verified: ${vResult.signer} (${vResult.source})`);
+      } else {
+        warn(`supply-chain verification skipped: ${vResult.reason}`);
       }
       const targetDir = join(agentsDir, "skills");
       const installed = installSkill(entry, targetDir);
