@@ -162,7 +162,7 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git checkout -b "$BRANCH"
           git add Formula/vakt.rb
-          git commit -m "chore(release): update homebrew formula to ${VERSION} [skip ci]"
+          git commit -m "chore(release): update homebrew formula to ${VERSION}"
           git push --force origin "$BRANCH"
           BODY="Automated formula update for release v${VERSION}.\n\nUpdates \`Formula/vakt.rb\` with the correct version and SHA-256 checksums for the published binaries.\n\n_This PR was opened automatically by the release workflow._"
           gh pr create \
