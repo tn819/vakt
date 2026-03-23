@@ -33,6 +33,24 @@ describe("collectGateIssues — skill checks", () => {
     rmSync(tmp, { recursive: true });
   });
 
+  test("suppresses unscoped warning when warnUnscoped is false", () => {
+    makeSkill("unscoped", "---\nname: unscoped\n---\n\nNo tools declared.\n");
+    const policy: Policy = { ...basePolicy, skills: { scopeRequired: false, warnUnscoped: false, blockOnHazards: false } };
+    const result = collectGateIssues(join(tmp, "skills"), {}, policy);
+    const issue = result.issues.find(i => i.name === "unscoped" && i.code === "unscoped");
+    expect(issue).toBeUndefined();
+    rmSync(tmp, { recursive: true });
+  });
+
+  test("scopeRequired still errors even when warnUnscoped is false", () => {
+    makeSkill("unscoped", "---\nname: unscoped\n---\n");
+    const policy: Policy = { ...basePolicy, skills: { scopeRequired: true, warnUnscoped: false, blockOnHazards: false } };
+    const result = collectGateIssues(join(tmp, "skills"), {}, policy);
+    const issue = result.issues.find(i => i.name === "unscoped" && i.code === "unscoped");
+    expect(issue?.severity).toBe("error");
+    rmSync(tmp, { recursive: true });
+  });
+
   test("errors for unscoped skill when scopeRequired", () => {
     makeSkill("unscoped", "---\nname: unscoped\n---\n");
     const policy: Policy = { ...basePolicy, skills: { scopeRequired: true, blockOnHazards: false } };

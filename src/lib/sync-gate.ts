@@ -50,11 +50,13 @@ function checkSkills(skillsDir: string, policy: Policy | null): GateIssue[] {
     const meta = readSkillMeta(skillPath);
 
     // Unscoped: no allowed-tools
-    if (!meta.allowedTools) {
+    const warnUnscoped = policy?.skills?.warnUnscoped ?? true;
+    const scopeRequired = policy?.skills?.scopeRequired;
+    if (!meta.allowedTools && (scopeRequired || warnUnscoped)) {
       issues.push({
         source: "skill",
         name: entry,
-        severity: policy?.skills?.scopeRequired ? "error" : "warn",
+        severity: scopeRequired ? "error" : "warn",
         code: "unscoped",
         detail: "no allowed-tools declaration — any tool can run under this skill",
       });
