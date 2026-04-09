@@ -9,6 +9,7 @@ import { collectGateIssues } from "../lib/sync-gate";
 import { promptBoolean } from "../lib/prompt";
 import { loadPolicy } from "../lib/policy";
 import { makePermissionsAdapter } from "../lib/permissions";
+import { syncPolicyHooks } from "../lib/policy-hooks";
 import { AuditStore } from "../lib/audit";
 import { resolveAll, formatForProvider, writeJsonConfig, writeTomlConfig, syncSkills } from "../lib/resolver";
 import type { ResolvedConfig } from "../lib/resolver";
@@ -243,6 +244,32 @@ function syncProviderPermissions(
   logPermissionsResult(result, dryRun);
 }
 
+function syncProviderHooks(provider: Provider, policy: Policy | null, dryRun: boolean): void {
+  if (!isInstalled(provider.detectCommand)) return;
+  
+  const result = syncPolicyHooks(
+    provider.id as "claude" | "cursor" | "gemini" | "codex" | "windsurf" | "vibe" | "opencode",
+    policy,
+    dryRun
+  );
+  
+  if (result.action === "skipped") return;
+  
+  const actionStr = {
+    created: "created",
+    updated: "updated", 
+    removed: "removed",
+    "dry-run": "[dry-run] would update",
+    skipped: "skipped"
+  }[result.action];
+  
+  if (dryRun && result.action === "dry-run") {
+    info(`[dry-run] Would update hook: ${result.path}`);
+  } else if (result.written) {
+    ok(`${actionStr} policy context: ${result.path}`);
+  }
+}
+
 function syncPermissions(providers: Provider[], policy: Policy | null, dryRun: boolean): void {
   const allow = policy?.tools?.allow ?? [];
   const deny  = policy?.tools?.deny  ?? [];
@@ -252,6 +279,7 @@ function syncPermissions(providers: Provider[], policy: Policy | null, dryRun: b
   for (const provider of providers) {
     console.log(`\n  ${bold(provider.displayName)}`);
     syncProviderPermissions(provider, allow, deny, dryRun);
+    syncProviderHooks(provider, policy, dryRun);
   }
 }
 
