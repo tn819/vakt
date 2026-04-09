@@ -41,15 +41,16 @@ function extractToolMentions(planText: string): ToolMention[] {
   let stepNum = 0;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
+    if (!line) continue;
     
-    const stepMatch = line.match(/^(?:Step\s+)?(\d+)[:.)\s]/i);
+    const stepMatch = /^(?:Step\s+)?(\d+)[:.)\s]/i.exec(line);
     if (stepMatch) {
-      stepNum = parseInt(stepMatch[1], 10);
+      stepNum = Number.parseInt(stepMatch[1] ?? "0", 10);
     }
-    
+
     for (const { name, regex } of TOOL_PATTERNS) {
       if (regex.test(line)) {
-        const argsMatch = line.match(/\(([^)]*)\)/);
+        const argsMatch = /\(([^)]*)\)/.exec(line);
         mentions.push({
           step: stepNum || i + 1,
           tool: name,
