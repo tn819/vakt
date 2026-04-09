@@ -24,19 +24,27 @@ describe("PolicyEngine.checkTool", () => {
   const engine = new PolicyEngine(strict);
 
   it("allows an explicitly allowed tool", () => {
-    expect(engine.checkTool("github", "list_repos")).toBe("allow");
+    const result = engine.checkTool("github", "list_repos");
+    expect(result.result).toBe("allow");
+    expect(result.matchedRule).toBe('servers.github.tools.allow["list_repos"]');
   });
 
   it("denies an explicitly denied tool on specific server", () => {
-    expect(engine.checkTool("github", "delete_repo")).toBe("deny");
+    const result = engine.checkTool("github", "delete_repo");
+    expect(result.result).toBe("deny");
+    expect(result.matchedRule).toBe('servers.github.tools.deny["delete_repo"]');
   });
 
   it("denies an unlisted tool when default is deny", () => {
-    expect(engine.checkTool("github", "unknown_tool")).toBe("deny");
+    const result = engine.checkTool("github", "unknown_tool");
+    expect(result.result).toBe("deny");
+    expect(result.matchedRule).toBe('default["deny"]');
   });
 
   it("denies tool matching wildcard glob on * server", () => {
-    expect(engine.checkTool("filesystem", "execute_shell")).toBe("deny");
+    const result = engine.checkTool("filesystem", "execute_shell");
+    expect(result.result).toBe("deny");
+    expect(result.matchedRule).toBe('servers["*"].tools.deny["*exec*"]');
   });
 
   it("specific server deny beats * server allow", () => {
@@ -49,12 +57,16 @@ describe("PolicyEngine.checkTool", () => {
         "*": { tools: { allow: ["delete_repo"] } },
       },
     };
-    expect(new PolicyEngine(p).checkTool("github", "delete_repo")).toBe("deny");
+    const result = new PolicyEngine(p).checkTool("github", "delete_repo");
+    expect(result.result).toBe("deny");
+    expect(result.matchedRule).toBe('servers.github.tools.deny["delete_repo"]');
   });
 
   it("allows all when default is allow and no rules match", () => {
     const permissive: Policy = { version: "1", default: "allow", registryPolicy: "allow-unverified" };
-    expect(new PolicyEngine(permissive).checkTool("any", "any_tool")).toBe("allow");
+    const result = new PolicyEngine(permissive).checkTool("any", "any_tool");
+    expect(result.result).toBe("allow");
+    expect(result.matchedRule).toBe('default["allow"]');
   });
 });
 
