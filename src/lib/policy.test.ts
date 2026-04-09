@@ -193,7 +193,7 @@ describe("PolicyEngine.checkPath", () => {
       version: "1", default: "allow", registryPolicy: "allow-unverified",
       servers: { fs: { paths: { deny: ["/etc"] } } },
     };
-    expect(new PolicyEngine(p).checkPath("fs", "/etc/passwd")).toBe("deny");
+    expect(new PolicyEngine(p).checkPath("fs", "/etc/passwd").result).toBe("deny");
   });
 
   it("denies a path matching wildcard server deny list", () => {
@@ -201,7 +201,7 @@ describe("PolicyEngine.checkPath", () => {
       version: "1", default: "allow", registryPolicy: "allow-unverified",
       servers: { "*": { paths: { deny: ["/etc"] } } },
     };
-    expect(new PolicyEngine(p).checkPath("any", "/etc/passwd")).toBe("deny");
+    expect(new PolicyEngine(p).checkPath("any", "/etc/passwd").result).toBe("deny");
   });
 
   it("allows a path in specific server allow list", () => {
@@ -210,12 +210,12 @@ describe("PolicyEngine.checkPath", () => {
       servers: { fs: { paths: { allow: ["~/projects"] } } },
     };
     const home = process.env["HOME"]!;
-    expect(new PolicyEngine(p).checkPath("fs", `${home}/projects/app`)).toBe("allow");
+    expect(new PolicyEngine(p).checkPath("fs", `${home}/projects/app`).result).toBe("allow");
   });
 
   it("falls through to default when no path rule matches", () => {
     const p: Policy = { version: "1", default: "allow", registryPolicy: "allow-unverified" };
-    expect(new PolicyEngine(p).checkPath("fs", "/tmp/file.txt")).toBe("allow");
+    expect(new PolicyEngine(p).checkPath("fs", "/tmp/file.txt").result).toBe("allow");
   });
 
   it("specific server deny beats wildcard allow for paths", () => {
@@ -226,7 +226,7 @@ describe("PolicyEngine.checkPath", () => {
         "*": { paths: { allow: ["/etc"] } },
       },
     };
-    expect(new PolicyEngine(p).checkPath("fs", "/etc/passwd")).toBe("deny");
+    expect(new PolicyEngine(p).checkPath("fs", "/etc/passwd").result).toBe("deny");
   });
 });
 
