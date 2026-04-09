@@ -100,6 +100,13 @@ skip_if_missing() {
   if ! command -v "$cmd" &>/dev/null; then
     skip "$cmd not installed"
   fi
+  
+  # Special handling for docker: check daemon is responsive (with timeout)
+  if [[ "$cmd" == "docker" ]]; then
+    if ! timeout 5 docker info &>/dev/null; then
+      skip "docker daemon not running or not responsive"
+    fi
+  fi
 }
 
 wait_for_file() {
