@@ -20,6 +20,9 @@ jobs:
       - name: Install bats
         run: brew install bats-core
 
+      - name: Setup Docker
+        uses: douglascamata/setup-docker-macos-action@a5d6e201a56c0da8f0c3616b8d5e182f89e45943 # v1-alpha
+
       - name: Run e2e tests
         run: |
           export PATH="$PWD/src:$HOME/.bun/bin:$PATH"
@@ -70,6 +73,9 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y bats
+
+      - name: Verify Docker
+        run: docker info
 
       - name: Run e2e tests
         run: |

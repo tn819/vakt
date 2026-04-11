@@ -158,8 +158,8 @@ teardown() {
   local session_id
   session_id=$(vakt agent start --provider docker --format id)
 
-  # Default network=none — outbound should fail
-  run vakt agent exec "$session_id" "curl --max-time 2 https://example.com"
+  # Default network=none — outbound should fail (curl may not exist = 127, or network unreachable)
+  run -127 vakt agent exec "$session_id" "curl --max-time 2 https://example.com"
   [ "$status" -ne 0 ]
 
   vakt agent destroy "$session_id"

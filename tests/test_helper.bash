@@ -98,12 +98,20 @@ set_test_secret() {
 skip_if_missing() {
   local cmd="$1"
   if ! command -v "$cmd" &>/dev/null; then
+    if [[ "${CI:-}" == "true" ]]; then
+      echo "$cmd not installed (CI environment requires all dependencies)" >&2
+      return 1
+    fi
     skip "$cmd not installed"
   fi
-  
+
   # Special handling for docker: check daemon is responsive (with timeout)
   if [[ "$cmd" == "docker" ]]; then
     if ! timeout 5 docker info &>/dev/null; then
+      if [[ "${CI:-}" == "true" ]]; then
+        echo "docker daemon not running or not responsive (CI environment requires Docker)" >&2
+        return 1
+      fi
       skip "docker daemon not running or not responsive"
     fi
   fi
