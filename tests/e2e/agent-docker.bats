@@ -1,9 +1,10 @@
 #!/usr/bin/env bats
-# Docker sandbox backend — e2e tests (local development / CI fallback)
+# Docker sandbox backend — e2e tests (local development / CI)
 # Docs: docs/playbooks/sandbox-docker.md
 #
-# Tests that require Docker are skipped automatically if the Docker daemon
-# is not running. This is the recommended backend for local development.
+# NOTE: These tests REQUIRE Docker to be running. They will FAIL (not skip)
+# if Docker is unavailable. This is intentional to ensure CI properly tests
+# the Docker sandbox functionality.
 
 load '../test_helper'
 
@@ -66,8 +67,6 @@ teardown() {
 # ── Docker availability check ─────────────────────────────────────────────────
 
 @test "docker daemon is accessible" {
-  skip_if_missing docker
-
   run docker info
   [ "$status" -eq 0 ]
 }
@@ -75,16 +74,12 @@ teardown() {
 # ── Agent lifecycle (requires Docker) ────────────────────────────────────────
 
 @test "agent start: creates Docker container and returns session id" {
-  skip_if_missing docker
-
   run vakt agent start --provider docker
   [ "$status" -eq 0 ]
   [[ "$output" == *"session"* ]] || [[ "$output" == *"container"* ]]
 }
 
 @test "agent exec: runs command in Docker container" {
-  skip_if_missing docker
-
   local session_id
   session_id=$(vakt agent start --provider docker --format id)
 
@@ -96,8 +91,6 @@ teardown() {
 }
 
 @test "agent write-file: writes file into container workspace" {
-  skip_if_missing docker
-
   local session_id
   session_id=$(vakt agent start --provider docker --format id)
 
@@ -111,8 +104,6 @@ teardown() {
 }
 
 @test "agent read-file: reads file from container workspace" {
-  skip_if_missing docker
-
   local session_id
   session_id=$(vakt agent start --provider docker --format id)
   vakt agent exec "$session_id" "sh -c 'echo vakt-content > /workspace/out.txt'"
@@ -125,8 +116,6 @@ teardown() {
 }
 
 @test "agent audit: Docker tool calls recorded in audit.db" {
-  skip_if_missing docker
-
   local session_id
   session_id=$(vakt agent start --provider docker --format id)
   vakt agent exec "$session_id" "echo audit-test"
@@ -139,8 +128,6 @@ teardown() {
 }
 
 @test "agent destroy: container is removed after session ends" {
-  skip_if_missing docker
-
   local session_id
   session_id=$(vakt agent start --provider docker --format id)
 
@@ -153,8 +140,6 @@ teardown() {
 }
 
 @test "agent: container network is isolated by default" {
-  skip_if_missing docker
-
   local session_id
   session_id=$(vakt agent start --provider docker --format id)
 

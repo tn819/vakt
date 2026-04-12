@@ -20,15 +20,27 @@ jobs:
       - name: Install bats
         run: brew install bats-core
 
-      - name: Setup Docker
-        uses: douglascamata/setup-docker-macos-action@a5d6e201a56c0da8f0c3616b8d5e182f89e45943
-        with:
-          provider: docker
-
-      - name: Verify Docker
+      # macOS Docker setup using Colima (more reliable than Docker Desktop)
+      - name: Setup Docker (macOS)
         run: |
+          echo "Installing Docker CLI and Colima..."
+          brew install docker
+          brew install colima
+          
+          echo "Starting Colima with Docker runtime..."
+          colima start --cpu 2 --memory 4 --disk 10
+          
+          echo "Waiting for Docker daemon..."
+          sleep 10
+          
+          echo "Docker info:"
           docker info
+          
+          echo "Docker version:"
           docker --version
+          
+          echo "Testing Docker..."
+          docker run --rm hello-world
 
       - name: Run e2e tests
         run: |
@@ -81,17 +93,32 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y bats
 
-      - name: Verify Docker
+      # Linux Docker setup - ensure daemon is running
+      - name: Setup Docker (Linux)
         run: |
-          docker info
+          echo "Checking Docker status..."
+          sudo systemctl status docker || true
+          
+          echo "Ensuring Docker daemon is running..."
+          sudo systemctl start docker || true
+          
+          echo "Adding user to docker group..."
+          sudo usermod -aG docker $USER || true
+          
+          echo "Docker info:"
+          docker info || sudo docker info
+          
+          echo "Docker version:"
           docker --version
+          
+          echo "Testing Docker..."
+          docker run --rm hello-world || sudo docker run --rm hello-world
 
-      - name: Run e2e tests (excluding Docker-dependent tests if Docker unavailable)
+      - name: Run e2e tests
         run: |
           export PATH="$PWD/src:$HOME/.bun/bin:$PATH"
           export AGENTS_SECRETS_BACKEND=env
           bats tests/e2e/
-        continue-on-error: false
 
       - name: Build binary (smoke test prerequisite)
         run: bun build src/index.ts --compile --outfile dist/vakt
