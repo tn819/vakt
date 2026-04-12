@@ -6,6 +6,8 @@
 # if Docker is unavailable. This is intentional to ensure CI properly tests
 # the Docker sandbox functionality.
 
+bats_require_minimum_version 1.5.0
+
 load '../test_helper'
 
 setup() {

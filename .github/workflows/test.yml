@@ -20,27 +20,15 @@ jobs:
       - name: Install bats
         run: brew install bats-core
 
-      # macOS Docker setup using Colima (more reliable than Docker Desktop)
-      - name: Setup Docker (macOS)
+      # macOS on GitHub Actions doesn't support Docker (no nested virtualization)
+      # Docker tests will fail gracefully if Docker Desktop isn't installed
+      # For local dev with Docker Desktop, tests will run normally
+      - name: Check Docker status (informational)
         run: |
-          echo "Installing Docker CLI and Colima..."
-          brew install docker
-          brew install colima
-          
-          echo "Starting Colima with Docker runtime..."
-          colima start --cpu 2 --memory 4 --disk 10
-          
-          echo "Waiting for Docker daemon..."
-          sleep 10
-          
-          echo "Docker info:"
-          docker info
-          
-          echo "Docker version:"
-          docker --version
-          
-          echo "Testing Docker..."
-          docker run --rm hello-world
+          echo "Note: Docker tests require Docker Desktop on macOS"
+          echo "GitHub Actions macOS runners don't support nested virtualization"
+          docker info 2>/dev/null || echo "Docker not available - tests will fail"
+        continue-on-error: true
 
       - name: Run e2e tests
         run: |
@@ -93,26 +81,24 @@ jobs:
           sudo apt-get update -qq
           sudo apt-get install -y bats
 
-      # Linux Docker setup - ensure daemon is running
-      - name: Setup Docker (Linux)
+      # Linux Docker setup - Docker is pre-installed but ensure daemon is running
+      - name: Setup Docker
         run: |
           echo "Checking Docker status..."
-          sudo systemctl status docker || true
-          
-          echo "Ensuring Docker daemon is running..."
-          sudo systemctl start docker || true
-          
-          echo "Adding user to docker group..."
-          sudo usermod -aG docker $USER || true
+          if ! docker info &>/dev/null; then
+            echo "Starting Docker daemon..."
+            sudo systemctl start docker || true
+            sleep 5
+          fi
           
           echo "Docker info:"
-          docker info || sudo docker info
+          docker info
           
           echo "Docker version:"
           docker --version
           
           echo "Testing Docker..."
-          docker run --rm hello-world || sudo docker run --rm hello-world
+          docker run --rm hello-world
 
       - name: Run e2e tests
         run: |
