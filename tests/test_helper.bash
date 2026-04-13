@@ -109,6 +109,10 @@ skip_if_missing() {
   fi
 }
 
+docker_with_timeout() {
+  timeout 10 docker "$@"
+}
+
 wait_for_file() {
   local file="$1"
   local timeout="${2:-5}"

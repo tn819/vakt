@@ -69,7 +69,7 @@ teardown() {
 # ── Docker availability check ─────────────────────────────────────────────────
 
 @test "docker daemon is accessible" {
-  run docker info
+  run docker_with_timeout info
   [ "$status" -eq 0 ]
 }
 
@@ -137,7 +137,7 @@ teardown() {
   [ "$status" -eq 0 ]
 
   # Container should no longer exist
-  run docker inspect "$session_id" 2>&1
+  run docker_with_timeout inspect "$session_id" 2>&1
   [ "$status" -ne 0 ]
 }
 
