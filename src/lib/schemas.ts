@@ -321,6 +321,12 @@ export const PolicySchema = z.object({
      */
     scopeRequired: z.boolean().default(false),
     /**
+     * When false, unscoped skills are silently allowed (no warning or error).
+     * Useful when installing third-party skills that intentionally omit allowed-tools.
+     * Default: true (unscoped skills produce a warning).
+     */
+    warnUnscoped: z.boolean().default(true),
+    /**
      * Skills with static hazard findings (curl-pipe-sh, eval-exec, etc.)
      * become gate errors instead of warnings.
      */
