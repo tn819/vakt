@@ -20,6 +20,16 @@ jobs:
       - name: Install bats
         run: brew install bats-core
 
+      # macOS on GitHub Actions doesn't support Docker (no nested virtualization)
+      # Docker tests will fail gracefully if Docker Desktop isn't installed
+      # For local dev with Docker Desktop, tests will run normally
+      - name: Check Docker status (informational)
+        run: |
+          echo "Note: Docker tests require Docker Desktop on macOS"
+          echo "GitHub Actions macOS runners don't support nested virtualization"
+          docker info 2>/dev/null || echo "Docker not available - tests will fail"
+        continue-on-error: true
+
       - name: Run e2e tests
         run: |
           export PATH="$PWD/src:$HOME/.bun/bin:$PATH"
@@ -70,6 +80,25 @@ jobs:
         run: |
           sudo apt-get update -qq
           sudo apt-get install -y bats
+
+      # Linux Docker setup - Docker is pre-installed but ensure daemon is running
+      - name: Setup Docker
+        run: |
+          echo "Checking Docker status..."
+          if ! docker info &>/dev/null; then
+            echo "Starting Docker daemon..."
+            sudo systemctl start docker || true
+            sleep 5
+          fi
+          
+          echo "Docker info:"
+          docker info
+          
+          echo "Docker version:"
+          docker --version
+          
+          echo "Testing Docker..."
+          docker run --rm hello-world
 
       - name: Run e2e tests
         run: |
