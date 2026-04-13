@@ -11,9 +11,6 @@ const config: KnipConfig = {
     "eslint", // called in scripts, provided by devDependency eslint
     "knip",   // called in scripts, provided by devDependency knip
   ],
-  ignore: [
-    "src/lib/verify.ts", // pending feat/wire-verify-supply-chain
-  ],
   // GitHub Actions plugin fails to parse multiline YAML strings in release.yml
   "github-actions": false,
 
