@@ -74,15 +74,15 @@ async function handleRegistryServer(
   const resolved = client.resolvePackage(entry);
   const isNpx = resolved.command === "npx" || resolved.command === "bunx";
   const pkgType = isNpx ? "npm" : "oci";
-  const identifier = isNpx 
-    ? resolved.args.find(a => !a.startsWith("-")) ?? entry.name
-    : entry.name;
-  
+  const identifier = isNpx
+    ? resolved.args.find(a => !a.startsWith("-")) ?? entry.server.name
+    : entry.server.name;
+
   const policy = loadMergedPolicy(AGENTS_DIR);
   const engine = policy ? new PolicyEngine(policy) : null;
   const registryPolicy = engine?.registryPolicy ?? "allow-unverified";
-  
-  const vResult = await verifyPackage(pkgType, identifier, entry.version);
+
+  const vResult = await verifyPackage(pkgType, identifier, entry.server.version);
   
   if (!vResult.ok) {
     if (registryPolicy === "registry-only") {
