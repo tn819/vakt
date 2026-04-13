@@ -59,9 +59,10 @@ ${VAKT_MARKER_END}
   
   if (dryRun) return { written: false, path: rulePath, action: "dry-run" };
   
+  const existed = existsSync(rulePath);
   ensureDir(rulePath);
   writeFileSync(rulePath, content, "utf-8");
-  return { written: true, path: rulePath, action: existsSync(rulePath) ? "updated" : "created" };
+  return { written: true, path: rulePath, action: existed ? "updated" : "created" };
 }
 
 // ── OpenCode/Mistral: AGENTS.md injection ────────────────────────────────────
@@ -88,9 +89,10 @@ function updateAgentsMd(agentsMdPath: string, policyContext: string, dryRun: boo
   
   if (dryRun) return { written: false, path: agentsMdPath, action: "dry-run" };
   
+  const existed = existsSync(agentsMdPath);
   ensureDir(agentsMdPath);
   writeFileSync(agentsMdPath, newContent, "utf-8");
-  return { written: true, path: agentsMdPath, action: existsSync(agentsMdPath) ? "updated" : "created" };
+  return { written: true, path: agentsMdPath, action: existed ? "updated" : "created" };
 }
 
 export function syncOpenCodeAgentsMd(policy: Policy | null, dryRun: boolean): HookResult {
@@ -313,11 +315,12 @@ export function syncHookProvider(
   
   if (dryRun) return { written: false, path: hookPath, action: "dry-run" };
   
+  const existed = existsSync(hookPath);
   ensureDir(hookPath);
   writeFileSync(hookPath, script, { encoding: "utf-8", mode: 0o755 });
   updateHookConfig(hookConfigPath, "vakt-policy", hookPath, dryRun);
   
-  return { written: true, path: hookPath, action: existsSync(hookPath) ? "updated" : "created" };
+  return { written: true, path: hookPath, action: existed ? "updated" : "created" };
 }
 
 // ── Main entry point ─────────────────────────────────────────────────────────
