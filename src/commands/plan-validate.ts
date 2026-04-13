@@ -41,7 +41,7 @@ function extractToolMentions(planText: string): ToolMention[] {
   let stepNum = 0;
   for (let i = 0; i < lines.length; i++) {
     const line = lines[i];
-    if (!line) continue;
+    if (typeof line !== "string") continue;
     
     const stepMatch = /^(?:Step\s+)?(\d+)[:.)\s]/i.exec(line);
     if (stepMatch) {
