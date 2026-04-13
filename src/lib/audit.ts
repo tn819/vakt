@@ -79,6 +79,19 @@ export class AuditStore {
         closed_at    INTEGER
       )`,
       `CREATE INDEX IF NOT EXISTS idx_ss_status ON sandbox_sessions(status)`,
+      `CREATE TABLE IF NOT EXISTS routing_events (
+        id          INTEGER PRIMARY KEY AUTOINCREMENT,
+        routed_at   INTEGER NOT NULL,
+        backend     TEXT NOT NULL,
+        prompt_tokens INTEGER NOT NULL,
+        tool_count  INTEGER NOT NULL,
+        has_code    INTEGER NOT NULL,
+        has_math    INTEGER NOT NULL,
+        matched_rule INTEGER,
+        latency_ms  INTEGER
+      )`,
+      `CREATE INDEX IF NOT EXISTS idx_re_backend ON routing_events(backend)`,
+      `CREATE INDEX IF NOT EXISTS idx_re_routed ON routing_events(routed_at)`,
     ]) {
       this.db.prepare(sql).run();
     }
@@ -159,5 +172,36 @@ export class AuditStore {
     this.db.prepare(
       "UPDATE sandbox_sessions SET status = 'closed', closed_at = ? WHERE id = ?"
     ).run(Date.now(), id);
+  }
+
+  recordRouting(r: {
+    backend: string;
+    promptTokens: number;
+    toolCount: number;
+    hasCode: boolean;
+    hasMath: boolean;
+    matchedRule?: number;
+    latencyMs?: number;
+  }): void {
+    this.db.prepare(
+      `INSERT INTO routing_events
+       (routed_at, backend, prompt_tokens, tool_count, has_code, has_math, matched_rule, latency_ms)
+       VALUES (?,?,?,?,?,?,?,?)`
+    ).run(
+      Date.now(),
+      r.backend,
+      r.promptTokens,
+      r.toolCount,
+      r.hasCode ? 1 : 0,
+      r.hasMath ? 1 : 0,
+      r.matchedRule ?? null,
+      r.latencyMs ?? null
+    );
+  }
+
+  recentRoutingEvents(limit: number): any[] {
+    return this.db.prepare(
+      "SELECT * FROM routing_events ORDER BY routed_at DESC LIMIT ?"
+    ).all(limit) as any[];
   }
 }

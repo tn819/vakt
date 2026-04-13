@@ -143,6 +143,23 @@ export const AgentConfigSchema = z.object({
   skills: z.object({
     registry: SkillsRegistryConfigSchema.optional(),
   }).optional(),
+  modelRouter: z.object({
+    port: z.number().default(4000),
+    backends: z.record(z.object({
+      url: z.string(),
+      apiKey: z.string().optional(),
+      maxCtx: z.number().optional(),
+    })).optional(),
+    rules: z.array(z.object({
+      if: z.object({
+        promptTokens: z.object({ gt: z.number() }).optional(),
+        toolCount: z.object({ gt: z.number() }).optional(),
+        hasCode: z.boolean().optional(),
+        hasMath: z.boolean().optional(),
+      }).optional(),
+      use: z.union([z.string(), z.array(z.string())]),
+    })).optional(),
+  }).optional(),
 });
 
 // ── Provider registry ─────────────────────────────────────────────────────────
@@ -221,6 +238,7 @@ export type HttpServer = z.infer<typeof HttpServerSchema>;
 export type McpServer = z.infer<typeof McpServerSchema>;
 export type McpConfig = z.infer<typeof McpConfigSchema>;
 export type AgentConfig = z.infer<typeof AgentConfigSchema>;
+export type ModelRouter = z.infer<typeof AgentConfigSchema>["modelRouter"];
 export type Provider = z.infer<typeof ProviderSchema>;
 export type Providers = z.infer<typeof ProvidersSchema>;
 
