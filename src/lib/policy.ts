@@ -100,34 +100,58 @@ function globToRegex(pattern: string): RegExp {
   return new RegExp(`^${escaped}$`);
 }
 
-function matchesAny(patterns: string[], value: string): boolean {
-  return patterns.some(p => globToRegex(p).test(value));
+export interface CheckResult {
+  result: PolicyResult;
+  matchedRule?: string;
 }
 
 export class PolicyEngine {
   constructor(private policy: Policy) {}
 
-  checkTool(serverName: string, toolName: string): PolicyResult {
+  checkTool(serverName: string, toolName: string): CheckResult {
     const specific = this.policy.servers?.[serverName];
     const wildcard = this.policy.servers?.["*"];
 
-    // Priority: specific deny > wildcard deny > specific allow > wildcard allow > default
-    if (specific?.tools?.deny  && matchesAny(specific.tools.deny,  toolName)) return "deny";
-    if (wildcard?.tools?.deny  && matchesAny(wildcard.tools.deny,  toolName)) return "deny";
-    if (specific?.tools?.allow && matchesAny(specific.tools.allow, toolName)) return "allow";
-    if (wildcard?.tools?.allow && matchesAny(wildcard.tools.allow, toolName)) return "allow";
-    return this.policy.default;
+    if (specific?.tools?.deny) {
+      const matched = specific.tools.deny.find(p => globToRegex(p).test(toolName));
+      if (matched) return { result: "deny", matchedRule: `servers.${serverName}.tools.deny["${matched}"]` };
+    }
+    if (wildcard?.tools?.deny) {
+      const matched = wildcard.tools.deny.find(p => globToRegex(p).test(toolName));
+      if (matched) return { result: "deny", matchedRule: `servers["*"].tools.deny["${matched}"]` };
+    }
+    if (specific?.tools?.allow) {
+      const matched = specific.tools.allow.find(p => globToRegex(p).test(toolName));
+      if (matched) return { result: "allow", matchedRule: `servers.${serverName}.tools.allow["${matched}"]` };
+    }
+    if (wildcard?.tools?.allow) {
+      const matched = wildcard.tools.allow.find(p => globToRegex(p).test(toolName));
+      if (matched) return { result: "allow", matchedRule: `servers["*"].tools.allow["${matched}"]` };
+    }
+    return { result: this.policy.default, matchedRule: `default["${this.policy.default}"]` };
   }
 
-  checkPath(serverName: string, filePath: string): PolicyResult {
+  checkPath(serverName: string, filePath: string): CheckResult {
     const specific = this.policy.servers?.[serverName];
     const wildcard = this.policy.servers?.["*"];
 
-    if (specific?.paths?.deny  && specific.paths.deny.some(p => filePath.startsWith(expandHome(p)))) return "deny";
-    if (wildcard?.paths?.deny  && wildcard.paths.deny.some(p => filePath.startsWith(expandHome(p)))) return "deny";
-    if (specific?.paths?.allow && specific.paths.allow.some(p => filePath.startsWith(expandHome(p)))) return "allow";
-    if (wildcard?.paths?.allow && wildcard.paths.allow.some(p => filePath.startsWith(expandHome(p)))) return "allow";
-    return this.policy.default;
+    if (specific?.paths?.deny) {
+      const matched = specific.paths.deny.find(p => filePath.startsWith(expandHome(p)));
+      if (matched) return { result: "deny", matchedRule: `servers.${serverName}.paths.deny["${matched}"]` };
+    }
+    if (wildcard?.paths?.deny) {
+      const matched = wildcard.paths.deny.find(p => filePath.startsWith(expandHome(p)));
+      if (matched) return { result: "deny", matchedRule: `servers["*"].paths.deny["${matched}"]` };
+    }
+    if (specific?.paths?.allow) {
+      const matched = specific.paths.allow.find(p => filePath.startsWith(expandHome(p)));
+      if (matched) return { result: "allow", matchedRule: `servers.${serverName}.paths.allow["${matched}"]` };
+    }
+    if (wildcard?.paths?.allow) {
+      const matched = wildcard.paths.allow.find(p => filePath.startsWith(expandHome(p)));
+      if (matched) return { result: "allow", matchedRule: `servers["*"].paths.allow["${matched}"]` };
+    }
+    return { result: this.policy.default, matchedRule: `default["${this.policy.default}"]` };
   }
 
   get registryPolicy() { return this.policy.registryPolicy ?? "allow-unverified"; }

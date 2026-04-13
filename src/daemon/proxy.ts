@@ -6,10 +6,40 @@ import type { Policy } from "../lib/schemas";
 
 interface JsonRpcFrame { jsonrpc: "2.0"; id?: unknown; method?: string; params?: Record<string, unknown>; }
 
-function denyFrame(id: unknown, toolName: string): string {
+interface DenyData {
+  rule: string;
+  hint?: string;
+  systemMessage: string;
+}
+
+function buildDenyData(rule: string): DenyData {
+  const isWildcardServer = rule.includes('servers["*"]') || rule.includes("servers['*']");
+  const isWildcardTool = rule.includes('["*"]') || rule.includes("['*']");
+  
+  let hint: string | undefined;
+  if (isWildcardServer && isWildcardTool) {
+    hint = "All tools on all servers are denied by default. Add specific allow rules.";
+  } else if (isWildcardServer) {
+    hint = "Tool is denied by wildcard server rule. Add specific server rule to allow.";
+  } else if (isWildcardTool) {
+    hint = "Tool matches wildcard deny pattern. Use specific tool name to allow.";
+  }
+  
+  return {
+    rule,
+    hint,
+    systemMessage: `vakt blocked tool — matched policy: ${rule}`,
+  };
+}
+
+function denyFrame(id: unknown, toolName: string, data: DenyData): string {
   return JSON.stringify({
     jsonrpc: "2.0", id,
-    error: { code: -32603, message: `vakt: tool '${toolName}' denied by policy` },
+    error: { 
+      code: -32603, 
+      message: `vakt: tool '${toolName}' denied by policy`,
+      data,
+    },
   }) + "\n";
 }
 
@@ -48,20 +78,21 @@ export function createProxy(opts: ProxyOptions) {
       if (frame.method === "tools/call") {
         const toolName  = (frame.params?.["name"] ?? "") as string;
         const startedAt = Date.now();
-        const result    = engine.checkTool(opts.serverName, toolName);
+        const checkResult = engine.checkTool(opts.serverName, toolName);
 
-        if (result === "deny") {
-          denied.push(denyFrame(frame.id, toolName));
+        if (checkResult.result === "deny") {
+          const denyData = buildDenyData(checkResult.matchedRule ?? "unknown");
+          denied.push(denyFrame(frame.id, toolName, denyData));
           const endedAt = Date.now();
           opts.store.recordToolCall({
             sessionId, serverName: opts.serverName, toolName, runtime: "local",
             provider: opts.provider ?? "unknown", policyResult: "deny",
-            startedAt, endedAt, responseOk: false,
+            startedAt, endedAt, responseOk: false, policyRule: checkResult.matchedRule,
           });
           recordToolCallSpan({
             serverName: opts.serverName, toolName, runtime: "local",
             policyResult: "deny", provider: opts.provider ?? "unknown",
-            sessionId, startedAt, endedAt, ok: false,
+            sessionId, startedAt, endedAt, ok: false, policyRule: checkResult.matchedRule,
           });
         } else {
           forward.push(raw);
