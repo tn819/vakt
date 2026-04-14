@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% if page.title %}{{ page.title }} — {% endif %}vakt</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
+  <link rel="icon" type="image/svg+xml" href="{{ '/assets/img/vakt.svg' | relative_url }}">
+</head>
+<body>
+  <div class="border-frame">
+    <header class="site-header">
+      <div class="container">
+        <a href="{{ '/' | relative_url }}" class="logo">
+          <span class="logo-mark">ᚢ</span>
+          <span class="logo-text">vakt</span>
+        </a>
+        <nav class="site-nav">
+          <a href="{{ '/docs' | relative_url }}">docs</a>
+          <a href="{{ '/providers' | relative_url }}">providers</a>
+          <a href="{{ site.repo_url }}" target="_blank">github</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="site-content">
+      <div class="container">
+        {{ content }}
+      </div>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-brand">
+            <span class="logo-mark">ᚢ</span>
+            <span>vakt</span>
+          </div>
+          <div class="footer-links">
+            <a href="{{ site.repo_url }}">GitHub</a>
+            <a href="{{ '/docs' | relative_url }}">Documentation</a>
+            <a href="{{ site.repo_url }}/issues">Issues</a>
+            <a href="{{ site.repo_url }}/releases">Releases</a>
+          </div>
+          <div class="footer-meta">
+            <span>MIT License</span>
+            <span>v{{ site.current_version }}</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>

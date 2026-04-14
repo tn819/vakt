@@ -13,6 +13,7 @@ import { syncPolicyHooks } from "../lib/policy-hooks";
 import { AuditStore } from "../lib/audit";
 import { resolveAll, formatForProvider, writeJsonConfig, writeTomlConfig, syncSkills } from "../lib/resolver";
 import { fetchRemotePolicy, fetchRemoteMcpConfig, mergeRemoteMcp } from "../lib/remote";
+import type { AgentConfig } from "../lib/schemas";
 import type { ResolvedConfig } from "../lib/resolver";
 import type { Provider, McpConfig } from "../lib/schemas";
 import type { Policy } from "../lib/schemas";
@@ -470,6 +471,31 @@ function recordSyncAudit(
   } catch { /* audit failures are non-fatal */ }
 }
 
+async function maybeAutoPull(
+  userConfig: AgentConfig,
+  agentsDir: string,
+  dryRun: boolean,
+  skipAutoPull: boolean
+): Promise<void> {
+  if (dryRun || skipAutoPull) return;
+  if (!userConfig.remote?.url || !userConfig.remote?.autoSync) return;
+
+  info("autoSync enabled — pulling remote config...");
+  try {
+    const policyFetched = await fetchRemotePolicy(userConfig.remote, agentsDir, userConfig.remote.token);
+    if (policyFetched) ok("Remote policy pulled");
+
+    const mcpFetched = await fetchRemoteMcpConfig(userConfig.remote, agentsDir, userConfig.remote.token);
+    if (mcpFetched) {
+      ok("Remote MCP config pulled");
+      await mergeRemoteMcp(agentsDir, false);
+    }
+  } catch (e) {
+    warn(`Auto-pull failed: ${e instanceof Error ? e.message : String(e)}`);
+    warn("Continuing with local config...");
+  }
+}
+
 export function registerSync(program: Command): void {
   program
     .command("sync")
@@ -496,26 +522,9 @@ export function registerSync(program: Command): void {
 
       const agentsDir = AGENTS_DIR;
 
-      // ── Auto-sync: pull remote config first ────────────────────────────────
-      if (!dryRun && !skipAutoPull) {
-        const userConfig = loadAgentConfig();
-        if (userConfig.remote?.url && userConfig.remote?.autoSync) {
-          info("autoSync enabled — pulling remote config...");
-          try {
-            const policyFetched = await fetchRemotePolicy(userConfig.remote, agentsDir, userConfig.remote.token);
-            if (policyFetched) ok("Remote policy pulled");
+      const userConfig = loadAgentConfig();
+      await maybeAutoPull(userConfig, agentsDir, dryRun, skipAutoPull);
 
-            const mcpFetched = await fetchRemoteMcpConfig(userConfig.remote, agentsDir, userConfig.remote.token);
-            if (mcpFetched) {
-              ok("Remote MCP config pulled");
-              await mergeRemoteMcp(agentsDir, false);
-            }
-          } catch (e) {
-            warn(`Auto-pull failed: ${e instanceof Error ? e.message : String(e)}`);
-            warn("Continuing with local config...");
-          }
-        }
-      }
       if (!existsSync(agentsDir)) {
         console.error("Run 'vakt init' first");
         process.exit(1);
@@ -540,7 +549,6 @@ export function registerSync(program: Command): void {
         await promptUnclassifiedResources(agentsDir);
       }
 
-      const userConfig = loadAgentConfig();
       const allProviders = loadProviders();
 
       const enabledProviders = userConfig.providers

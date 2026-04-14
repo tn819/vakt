@@ -1,0 +1,37 @@
+# GitHub Pages Configuration
+theme: minima  # We'll override everything with custom CSS
+title: vakt
+description: One config. All your AI coding tools. Zero credentials on disk.
+url: https://tn819.github.io
+baseurl: /vakt
+
+# Build settings
+markdown: kramdown
+highlighter: rouge
+plugins:
+  - jekyll-feed
+  - jekyll-sitemap
+
+# Exclude from processing
+exclude:
+  - Gemfile
+  - Gemfile.lock
+  - node_modules
+  - vendor
+  - .git
+  - .github
+  - adr/
+  - playbooks/
+
+# Custom variables
+current_version: "0.9.0"
+repo_url: "https://github.com/tn819/vakt"
+
+# Collections
+collections:
+  features:
+    output: true
+    permalink: /:collection/:name/
+  providers:
+    output: true
+    permalink: /:collection/:name/

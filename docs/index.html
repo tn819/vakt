@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>vakt — One config. All your AI coding tools. Zero credentials on disk.</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="{{ '/assets/css/style.css' | relative_url }}">
+  <link rel="icon" type="image/svg+xml" href="{{ '/assets/img/vakt.svg' | relative_url }}">
+</head>
+<body>
+  <div class="border-frame">
+    <header class="site-header">
+      <div class="container">
+        <a href="{{ '/' | relative_url }}" class="logo">
+          <span class="logo-mark">ᚢ</span>
+          <span class="logo-text">vakt</span>
+        </a>
+        <nav class="site-nav">
+          <a href="{{ '/docs' | relative_url }}">docs</a>
+          <a href="{{ '/providers' | relative_url }}">providers</a>
+          <a href="{{ site.repo_url }}" target="_blank">github</a>
+        </nav>
+      </div>
+    </header>
+
+    <main class="site-content">
+      <section class="hero">
+        <div class="container">
+          <div class="hero-content">
+            <h1 class="hero-title">
+              <span class="prompt">$</span> vakt
+            </h1>
+            <p class="hero-subtitle">One config. All your AI coding tools. Zero credentials on disk.</p>
+            <div class="hero-code">
+              <pre><code><span class="comment"># Install</span>
+brew install vakt
+
+<span class="comment"># Initialize</span>
+vakt init
+
+<span class="comment"># Store secrets in keychain, not in files</span>
+vakt secrets set GITHUB_TOKEN ghp_...
+
+<span class="comment"># Sync to all your AI tools</span>
+vakt sync</code></pre>
+            </div>
+            <div class="hero-cta">
+              <a href="{{ '/docs/getting-started' | relative_url }}" class="btn btn-primary">Get Started</a>
+              <a href="{{ site.repo_url }}" class="btn btn-secondary">View on GitHub</a>
+            </div>
+          </div>
+          <div class="hero-visual">
+            <div class="terminal-window">
+              <div class="terminal-header">
+                <span class="terminal-dot red"></span>
+                <span class="terminal-dot yellow"></span>
+                <span class="terminal-dot green"></span>
+                <span class="terminal-title">vakt sync</span>
+              </div>
+              <div class="terminal-body">
+                <div class="terminal-line">
+                  <span class="prompt">$</span> <span class="command">vakt sync</span>
+                </div>
+                <div class="terminal-output">
+                  <div class="sync-group">
+                    <div class="sync-header">── MCP Servers ─────────────────────────────</div>
+                    <div class="sync-item success">
+                      <span class="check">✓</span>
+                      <span class="provider">Claude Code</span>
+                      <span class="count">12 servers</span>
+                    </div>
+                    <div class="sync-item success">
+                      <span class="check">✓</span>
+                      <span class="provider">Cursor</span>
+                      <span class="count">12 servers</span>
+                    </div>
+                    <div class="sync-item success">
+                      <span class="check">✓</span>
+                      <span class="provider">Gemini CLI</span>
+                      <span class="count">12 servers</span>
+                    </div>
+                    <div class="sync-item success">
+                      <span class="check">✓</span>
+                      <span class="provider">Codex</span>
+                      <span class="count">12 servers</span>
+                    </div>
+                    <div class="sync-item success">
+                      <span class="check">✓</span>
+                      <span class="provider">OpenCode</span>
+                      <span class="count">12 servers</span>
+                    </div>
+                    <div class="sync-item success">
+                      <span class="check">✓</span>
+                      <span class="provider">Windsurf</span>
+                      <span class="count">12 servers</span>
+                    </div>
+                  </div>
+                  <div class="sync-group">
+                    <div class="sync-header">── Skills ──────────────────────────────────</div>
+                    <div class="sync-item success">
+                      <span class="check">✓</span>
+                      <span class="count">8 skills symlinked</span>
+                    </div>
+                  </div>
+                  <div class="sync-footer">
+                    <span class="success">Sync complete.</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="features">
+        <div class="container">
+          <h2 class="section-title">What vakt does</h2>
+          <div class="feature-grid">
+            <div class="feature-card">
+              <div class="feature-icon">🔐</div>
+              <h3>Secrets in keychain</h3>
+              <p>No API keys in JSON files. Secrets resolve from macOS Keychain, Linux pass, or environment at sync time.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">🛡️</div>
+              <h3>Runtime policy</h3>
+              <p>Define what each MCP server can do. Block dangerous tools before they run. Audit every call.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">📡</div>
+              <h3>Multi-provider sync</h3>
+              <p>One command writes config to Claude, Cursor, Gemini, Codex, OpenCode, and Windsurf simultaneously.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">☁️</div>
+              <h3>Cloud sandboxes</h3>
+              <p>Route MCP servers to E2B cloud sandboxes. Same config, isolated runtime, no local attack surface.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">🔄</div>
+              <h3>Model router</h3>
+              <p>Route completions between local and frontier LLMs. Save costs without changing your workflow.</p>
+            </div>
+            <div class="feature-card">
+              <div class="feature-icon">📊</div>
+              <h3>Audit & observability</h3>
+              <p>SQLite audit log with SIEM export. OpenTelemetry spans for distributed tracing. Compliance-ready.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section class="providers">
+        <div class="container">
+          <h2 class="section-title">Supported providers</h2>
+          <div class="provider-list">
+            <a href="{{ '/providers/claude' | relative_url }}" class="provider-item">Claude Code</a>
+            <a href="{{ '/providers/cursor' | relative_url }}" class="provider-item">Cursor</a>
+            <a href="{{ '/providers/gemini' | relative_url }}" class="provider-item">Gemini CLI</a>
+            <a href="{{ '/providers/codex' | relative_url }}" class="provider-item">Codex</a>
+            <a href="{{ '/providers/opencode' | relative_url }}" class="provider-item">OpenCode</a>
+            <a href="{{ '/providers/windsurf' | relative_url }}" class="provider-item">Windsurf</a>
+            <a href="{{ '/providers/vibe' | relative_url }}" class="provider-item">Mistral Vibe</a>
+          </div>
+        </div>
+      </section>
+
+      <section class="cta-section">
+        <div class="container">
+          <h2 class="section-title">Ready to secure your AI tools?</h2>
+          <div class="cta-code">
+            <pre><code>brew tap tn819/vakt https://github.com/tn819/vakt
+brew install vakt
+vakt init && vakt sync</code></pre>
+          </div>
+          <a href="{{ '/docs' | relative_url }}" class="btn btn-primary btn-large">Read the docs</a>
+        </div>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-brand">
+            <span class="logo-mark">ᚢ</span>
+            <span>vakt</span>
+          </div>
+          <div class="footer-links">
+            <a href="{{ site.repo_url }}">GitHub</a>
+            <a href="{{ '/docs' | relative_url }}">Documentation</a>
+            <a href="{{ site.repo_url }}/issues">Issues</a>
+            <a href="{{ site.repo_url }}/releases">Releases</a>
+          </div>
+          <div class="footer-meta">
+            <span>MIT License</span>
+            <span>v{{ site.current_version }}</span>
+          </div>
+        </div>
+      </div>
+    </footer>
+  </div>
+</body>
+</html>
