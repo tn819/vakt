@@ -2,8 +2,11 @@
 theme: minima  # We'll override everything with custom CSS
 title: vakt
 description: One config. All your AI coding tools. Zero credentials on disk.
-url: https://tn819.github.io
-baseurl: /vakt
+
+# For personal repo: https://USERNAME.github.io/vakt
+# For org repo: https://ORGNAME.github.io
+url: https://vakt-dev.github.io
+baseurl: ""
 
 # Build settings
 markdown: kramdown
