@@ -225,14 +225,15 @@ teardown() { teardown_test_env; }
 | Enterprise secrets | `secret:vault:` / `secret:op:` / `secret:azure:` refs | `lib/secrets.ts` — `vaultGet`, `opGet`, `azureGet` |
 | Skills registry | `vakt registry skills [list\|search\|install]` | `commands/registry.ts` |
 | Supply chain verify | `lib/verify.ts` | `lib/verify.ts` — `verifyOci`, `verifyNpm` |
+| Model router | `vakt route [--port] [--test]` | `commands/route.ts`, `lib/router.ts` |
 
 ### TODO
 
-| Feature | Notes |
-|---------|-------|
-| Wire `verify.ts` into `add-server` | Check `registryPolicy` in `PolicyEngine`; call `verifyPackage` before writing to `mcp-config.json` |
-| `autoSync` in `sync.ts` | Check `config.remote?.autoSync` at top of sync, call pull first |
-| GitHub Pages site | `docs/` — landing page, docs, enterprise guide |
+| Feature | Notes | Issue |
+|---------|-------|-------|
+| `autoSync` in `sync.ts` | Check `config.remote?.autoSync` at top of sync, call pull first | #110 (P2 - strategic foundation) |
+| GitHub Pages site | `docs/` — landing page, docs, enterprise guide | #111 (P3 - longer arc) |
+| Category-based routing | Intent classification layer above rule-based router | #104 (P3, depends on #101) |
 
 ## Secret Reference Syntax
 

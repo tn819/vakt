@@ -76,6 +76,7 @@ vakt sync                             # write to every installed CLI
 | OTel distributed tracing | ✓ | — | — | — |
 | Official registry verification | ✓ | ✓ | ✓ | — |
 | Cloud sandbox routing (E2B) | ✓ | — | — | — |
+| Model router (local/remote LLM) | ✓ | — | — | — |
 | Skills portability | ✓ | — | — | — |
 
 ### Integrations
@@ -103,6 +104,7 @@ vakt sync                             # write to every installed CLI
 - [Standardization in depth](#-standardization-in-depth)
 - [Policy engine](#-policy-engine)
 - [MCP Registry](#-mcp-registry)
+- [Model Router](#-model-router)
 - [Interoperability in depth](#-interoperability-in-depth)
 - [Commands](#commands)
 - [Supported providers](#supported-providers)
@@ -459,6 +461,40 @@ vakt add-server gh io.github.modelcontextprotocol/server-github
 ```
 
 Registry-resolved servers store their `registry` and `version` fields in `mcp-config.json`, enabling policy enforcement and future upgrade detection.
+
+---
+
+## 🔄 Model Router
+
+Route completion requests between local and frontier LLMs based on request characteristics. Save costs by sending routine completions to local models while reserving frontier APIs for complex requests.
+
+```bash
+vakt route                              # Start router on default port 4000
+vakt route --port 4001                  # Custom port
+vakt route --test --tokens 15000        # Test routing logic
+```
+
+Configure in `~/.agents/config.json`:
+
+```json
+{
+  "modelRouter": {
+    "port": 4000,
+    "backends": {
+      "local": { "url": "http://localhost:8000/v1", "maxCtx": 8192 },
+      "mistral": { "url": "https://api.mistral.ai/v1", "apiKey": "secret:MISTRAL_KEY", "maxCtx": 131072 }
+    },
+    "rules": [
+      { "if": { "promptTokens": { "gt": 16000 } }, "use": "mistral" },
+      { "if": { "toolCount": { "gt": 5 } }, "use": "mistral" },
+      { "if": { "hasCode": true }, "use": ["mistral", "local"] },
+      { "use": "local" }
+    ]
+  }
+}
+```
+
+Point your AI tool at `http://localhost:4000/v1` — vakt routes transparently.
 
 ---
 
