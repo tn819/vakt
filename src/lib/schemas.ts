@@ -211,6 +211,15 @@ export const ProviderSchema = z
       method: z.enum(["symlink", "native"]),
     }),
     /**
+     * Where to sync ~/.agents/AGENTS.md for this provider.
+     * "symlink" creates a symlink; "copy" writes the file contents.
+     * Absent = provider natively reads ~/.agents/AGENTS.md or has no instructions mechanism.
+     */
+    instructions: z.object({
+      path: PlatformStringMapSchema,
+      method: z.enum(["symlink", "copy"]),
+    }).optional(),
+    /**
      * Path to the provider's native permissions config file, keyed by platform.
      * When present and policy.tools is non-empty, vakt sync writes a managed
      * block to this file. Absent = no permissions-file target for this provider.
