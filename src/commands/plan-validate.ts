@@ -90,12 +90,12 @@ function validatePlan(
     }
     
     const result = engine.checkTool(serverName, mention.tool);
-    
-    if (result === "deny") {
+
+    if (result.result === "deny") {
       violations.push({
         step: mention.step,
         tool: mention.tool,
-        rule: "policy",
+        rule: result.matchedRule || "policy",
         suggestion: "Tool is denied by policy — use an allowed alternative",
         severity: "error",
       });
