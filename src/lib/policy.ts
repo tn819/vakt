@@ -100,10 +100,6 @@ function globToRegex(pattern: string): RegExp {
   return new RegExp(`^${escaped}$`);
 }
 
-function matchesAny(patterns: string[], value: string): boolean {
-  return patterns.some(p => globToRegex(p).test(value));
-}
-
 export interface CheckResult {
   result: PolicyResult;
   matchedRule?: string;
