@@ -49,8 +49,8 @@ export function registerConfig(program: Command): void {
     .description("Get a config value by dot-notation key")
     .action((key: string) => {
       guardInit();
-      const cfg = loadAgentConfig() as Record<string, unknown>;
-      const val = getNestedKey(cfg, key);
+      const raw = existsSync(configPath) ? JSON.parse(readFileSync(configPath, "utf-8")) as Record<string, unknown> : {};
+      const val = getNestedKey(raw, key);
       if (val === undefined) return; // exit 0 with empty output
       console.log(typeof val === "string" ? val : JSON.stringify(val));
     });

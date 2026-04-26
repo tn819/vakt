@@ -1,8 +1,20 @@
 import type { Command } from "commander";
-import { writeFileSync } from "node:fs";
+import { existsSync, readFileSync, writeFileSync } from "node:fs";
 import { join } from "node:path";
-import { loadMcpConfig, loadAgentConfig, AGENTS_DIR } from "../lib/config";
-import { getRuntimeForServer } from "../lib/runtime";
+import { loadMcpConfig, AGENTS_DIR } from "../lib/config";
+
+const KNOWN_BACKENDS = ["local", "e2b", "docker", "coder", "daytona", "fly", "gvisor", "kata", "microsandbox"];
+
+function loadRawConfig(): Record<string, unknown> {
+  const path = join(AGENTS_DIR, "config.json");
+  return existsSync(path) ? JSON.parse(readFileSync(path, "utf-8")) as Record<string, unknown> : {};
+}
+
+function getRuntimeForServerRaw(name: string, raw: Record<string, unknown>): string {
+  const rt = raw["runtime"] as Record<string, unknown> | undefined;
+  const servers = rt?.["servers"] as Record<string, string> | undefined;
+  return servers?.[name] ?? (rt?.["default"] as string | undefined) ?? "local";
+}
 
 export function registerRuntime(program: Command): void {
   const runtime = program.command("runtime").description("Manage server runtime backends (local or cloud)");
@@ -12,27 +24,28 @@ export function registerRuntime(program: Command): void {
     .description("Show which runtime each server uses")
     .action(() => {
       const mc = loadMcpConfig();
-      const ac = loadAgentConfig();
+      const raw = loadRawConfig();
       console.log(`\n${"SERVER".padEnd(25)} RUNTIME`);
       console.log("─".repeat(35));
       for (const name of Object.keys(mc)) {
-        console.log(`${name.padEnd(25)} ${getRuntimeForServer(name, ac)}`);
+        console.log(`${name.padEnd(25)} ${getRuntimeForServerRaw(name, raw)}`);
       }
     });
 
   runtime
     .command("set <server> <backend>")
-    .description("Set runtime for a server: local | e2b | docker")
+    .description(`Set runtime for a server: ${KNOWN_BACKENDS.join(" | ")}`)
     .action((server: string, backend: string) => {
-      if (!["local", "e2b", "docker"].includes(backend)) {
-        console.error("Backend must be 'local', 'e2b', or 'docker'");
+      if (!KNOWN_BACKENDS.includes(backend)) {
+        console.error(`Backend must be one of: ${KNOWN_BACKENDS.join(", ")}`);
         process.exit(1);
       }
-      const ac = loadAgentConfig();
-      if (!ac.runtime) (ac as any).runtime = { default: "local" };
-      if (!ac.runtime!.servers) ac.runtime!.servers = {};
-      (ac.runtime!.servers as Record<string, string>)[server] = backend;
-      writeFileSync(join(AGENTS_DIR, "config.json"), JSON.stringify(ac, null, 2) + "\n");
+      const raw = loadRawConfig();
+      if (!raw["runtime"]) raw["runtime"] = { default: "local" };
+      const rt = raw["runtime"] as Record<string, unknown>;
+      if (!rt["servers"]) rt["servers"] = {};
+      (rt["servers"] as Record<string, string>)[server] = backend;
+      writeFileSync(join(AGENTS_DIR, "config.json"), JSON.stringify(raw, null, 2) + "\n");
       console.log(`✓ ${server} → ${backend}`);
     });
 }

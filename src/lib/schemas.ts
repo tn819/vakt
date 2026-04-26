@@ -125,10 +125,10 @@ export const AgentConfigSchema = z.object({
     enabled:  z.boolean().default(true),
   }).optional(),
   runtime: z.object({
-    default: z.enum(["local", "e2b", "docker"]).default("local"),
-    servers: z.record(z.string(), z.enum(["local", "e2b", "docker"])).optional(),
+    default: z.enum(["local", "e2b", "docker", "coder", "daytona", "fly", "gvisor", "kata", "microsandbox"]).default("local"),
+    servers: z.record(z.string(), z.enum(["local", "e2b", "docker", "coder", "daytona", "fly", "gvisor", "kata", "microsandbox"])).optional(),
     e2b: z.object({
-      api_key:  z.string(),
+      api_key:  z.string().optional(),
       template: z.string().optional(),
     }).optional(),
     docker: z.object({
@@ -137,6 +137,39 @@ export const AgentConfigSchema = z.object({
       memory:  z.string().optional(),
       cpus:    z.string().optional(),
       network: z.enum(["none", "bridge"]).default("none"),
+    }).optional(),
+    coder: z.object({
+      url:               z.string().optional(),
+      token:             z.string().optional(),
+      org:               z.string().optional(),
+      template:          z.string().optional(),
+      stop_after_session: z.boolean().optional(),
+    }).optional(),
+    daytona: z.object({
+      api_url:    z.string().optional(),
+      api_key:    z.string().optional(),
+      image:      z.string().optional(),
+    }).optional(),
+    fly: z.object({
+      api_token: z.string().optional(),
+      app:       z.string().optional(),
+      region:    z.string().optional(),
+    }).optional(),
+    gvisor: z.object({
+      backend:       z.string().optional(),
+      runtime_class: z.string().optional(),
+      project:       z.string().optional(),
+    }).optional(),
+    kata: z.object({
+      kubeconfig:    z.string().optional(),
+      namespace:     z.string().optional(),
+      runtime_class: z.string().optional(),
+    }).optional(),
+    microsandbox: z.object({
+      api_url: z.string().optional(),
+      rootfs:  z.string().optional(),
+      cpus:    z.number().optional(),
+      mem_mb:  z.number().optional(),
     }).optional(),
   }).optional(),
   remote: RemoteConfigSchema.optional(),

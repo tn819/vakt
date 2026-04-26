@@ -38,6 +38,14 @@
         "win32": "%USERPROFILE%\\.config\\opencode\\skills"
       },
       "method": "symlink"
+    },
+    "instructions": {
+      "path": {
+        "darwin": "$HOME/.config/opencode/AGENTS.md",
+        "linux": "$HOME/.config/opencode/AGENTS.md",
+        "win32": "%USERPROFILE%\\.config\\opencode\\AGENTS.md"
+      },
+      "method": "symlink"
     }
   },
 
@@ -82,6 +90,14 @@
       },
       "method": "symlink"
     },
+    "instructions": {
+      "path": {
+        "darwin": "$HOME/.claude/CLAUDE.md",
+        "linux": "$HOME/.claude/CLAUDE.md",
+        "win32": "%USERPROFILE%\\.claude\\CLAUDE.md"
+      },
+      "method": "symlink"
+    },
     "permissionsPath": {
       "darwin": "$HOME/.claude/settings.json",
       "linux": "$HOME/.claude/settings.json",
@@ -119,6 +135,14 @@
       "path": "$HOME/.agents/skills",
       "method": "native",
       "_comment": "Gemini CLI reads ~/.agents/skills natively — no symlink needed"
+    },
+    "instructions": {
+      "path": {
+        "darwin": "$HOME/.gemini/GEMINI.md",
+        "linux": "$HOME/.gemini/GEMINI.md",
+        "win32": "%USERPROFILE%\\.gemini\\GEMINI.md"
+      },
+      "method": "symlink"
     }
   },
 
@@ -152,6 +176,14 @@
         "darwin": "$HOME/.codex/skills",
         "linux": "$HOME/.codex/skills",
         "win32": "%USERPROFILE%\\.codex\\skills"
+      },
+      "method": "symlink"
+    },
+    "instructions": {
+      "path": {
+        "darwin": "$HOME/.codex/AGENTS.md",
+        "linux": "$HOME/.codex/AGENTS.md",
+        "win32": "%USERPROFILE%\\.codex\\AGENTS.md"
       },
       "method": "symlink"
     }
@@ -189,6 +221,14 @@
         "darwin": "$HOME/.cursor/skills",
         "linux": "$HOME/.cursor/skills",
         "win32": "%USERPROFILE%\\.cursor\\skills"
+      },
+      "method": "symlink"
+    },
+    "instructions": {
+      "path": {
+        "darwin": "$HOME/.cursor/rules/AGENTS.md",
+        "linux": "$HOME/.cursor/rules/AGENTS.md",
+        "win32": "%USERPROFILE%\\.cursor\\rules\\AGENTS.md"
       },
       "method": "symlink"
     }
