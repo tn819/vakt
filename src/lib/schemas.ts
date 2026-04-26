@@ -125,10 +125,10 @@ export const AgentConfigSchema = z.object({
     enabled:  z.boolean().default(true),
   }).optional(),
   runtime: z.object({
-    default: z.enum(["local", "e2b", "docker"]).default("local"),
-    servers: z.record(z.string(), z.enum(["local", "e2b", "docker"])).optional(),
+    default: z.enum(["local", "e2b", "docker", "coder", "daytona", "fly", "gvisor", "kata", "microsandbox"]).default("local"),
+    servers: z.record(z.string(), z.string()).optional(),
     e2b: z.object({
-      api_key:  z.string(),
+      api_key:  z.string().optional(),
       template: z.string().optional(),
     }).optional(),
     docker: z.object({
@@ -138,7 +138,7 @@ export const AgentConfigSchema = z.object({
       cpus:    z.string().optional(),
       network: z.enum(["none", "bridge"]).default("none"),
     }).optional(),
-  }).optional(),
+  }).passthrough().optional(),
   remote: RemoteConfigSchema.optional(),
   skills: z.object({
     registry: SkillsRegistryConfigSchema.optional(),
@@ -210,15 +210,6 @@ export const ProviderSchema = z
       path: z.union([z.string(), PlatformStringMapSchema]),
       method: z.enum(["symlink", "native"]),
     }),
-    /**
-     * Where to sync ~/.agents/AGENTS.md for this provider.
-     * "symlink" creates a symlink; "copy" writes the file contents.
-     * Absent = provider natively reads ~/.agents/AGENTS.md or has no instructions mechanism.
-     */
-    instructions: z.object({
-      path: PlatformStringMapSchema,
-      method: z.enum(["symlink", "copy"]),
-    }).optional(),
     /**
      * Path to the provider's native permissions config file, keyed by platform.
      * When present and policy.tools is non-empty, vakt sync writes a managed

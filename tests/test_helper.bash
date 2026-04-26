@@ -107,6 +107,13 @@ skip_if_missing() {
       skip "docker daemon not running or not responsive"
     fi
   fi
+
+  # Special handling for kubectl: check cluster is reachable
+  if [[ "$cmd" == "kubectl" ]]; then
+    if ! timeout 5 kubectl cluster-info &>/dev/null; then
+      skip "kubectl cluster not reachable"
+    fi
+  fi
 }
 
 docker_with_timeout() {
